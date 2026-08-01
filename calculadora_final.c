@@ -1,24 +1,5 @@
 /* ============================================================
-   CALCULADORA DE HUELLA DE CARBONO PERSONAL - Version 2
-   ============================================================
-   Cambios respecto a la version anterior (ver lista acordada):
-     1. Pantalla de INTRODUCCION nueva, antes de pedir el nombre
-     2. Icono de bienvenida corregido (antes se dibujaba a tamano
-        completo 512x512 y tapaba el titulo)
-     3. Texto tenue mas oscuro (mejor contraste)
-     4. Boton "Iniciar test" deshabilitado ahora se ve con borde
-     5. Opciones del formulario con letra (A/B/C/D) y mas espacio
-     6. Fuente cargada con acentos/enye (antes solo ASCII basico)
-     7. FLAG_WINDOW_HIGHDPI para que el canvas no se vea borroso
-     8. Puente de teclado movil: una funcion exportada que JS
-        puede llamar para escribir el nombre desde un <input>
-        invisible superpuesto (necesario en Emscripten; en
-        escritorio no hace falta, ya que ahi se usa el teclado
-        fisico directo con GetCharPressed).
-
-   Todo lo que es EXCLUSIVO de la version web (Emscripten) esta
-   dentro de "#ifdef __EMSCRIPTEN__", para que este mismo archivo
-   tambien se pueda compilar como programa de escritorio normal.
+   CALCULADORA DE HUELLA DE CARBONO PERSONAL - Version 2 (Mobile-ready)
    ============================================================ */
 
 #include "raylib.h"
@@ -29,12 +10,9 @@
 #include <emscripten.h>
 #endif
 
-/* ============================================================
-   DATOS Y CALCULO (identico en logica a la version de consola)
-   ============================================================ */
 typedef struct {
     int transporte;
-    int tiempo_trayecto;  // 0 = no aplica (a pie/bici)
+    int tiempo_trayecto;
     int ducha;
     int riego;
     int lavado_auto;
@@ -108,26 +86,17 @@ ResultadoHuella calcular_huella(RespuestasUsuario r) {
     return res;
 }
 
-/* ============================================================
-   COLORES (paleta pastel con fondo claro)
-   ------------------------------------------------------------
-   COLOR_TEXTO_TENUE se oscurecio un poco (de 122,120,104 a
-   95,92,78) para mejorar el contraste sobre el fondo crema.
-   ============================================================ */
-#define COLOR_FONDO        (Color){ 251, 250, 246, 255 }  // crema suave
-#define COLOR_TARJETA      (Color){ 241, 239, 228, 255 }  // kaki muy claro
-#define COLOR_BORDE        (Color){ 217, 210, 154, 255 }  // kaki
-#define COLOR_BORDE_FUERTE (Color){ 180, 172, 120, 255 }  // kaki oscuro (bordes de enfasis)
-#define COLOR_ACENTO       (Color){ 133, 200, 162, 255 }  // verde azulado (teal)
-#define COLOR_ACENTO_TXT   (Color){ 15, 58, 40, 255 }     // texto oscuro sobre acento
-#define COLOR_MINT         (Color){ 187, 220, 181, 255 }  // menta claro
-#define COLOR_ROSA         (Color){ 233, 193, 217, 255 }  // rosa
-#define COLOR_TEXTO        (Color){ 58, 58, 52, 255 }     // gris carbon
-#define COLOR_TEXTO_TENUE  (Color){ 95, 92, 78, 255 }     // marron grisaceo (mas oscuro que antes)
+#define COLOR_FONDO        (Color){ 251, 250, 246, 255 }
+#define COLOR_TARJETA      (Color){ 241, 239, 228, 255 }
+#define COLOR_BORDE        (Color){ 217, 210, 154, 255 }
+#define COLOR_BORDE_FUERTE (Color){ 180, 172, 120, 255 }
+#define COLOR_ACENTO       (Color){ 133, 200, 162, 255 }
+#define COLOR_ACENTO_TXT   (Color){ 15, 58, 40, 255 }
+#define COLOR_MINT         (Color){ 187, 220, 181, 255 }
+#define COLOR_ROSA         (Color){ 233, 193, 217, 255 }
+#define COLOR_TEXTO        (Color){ 58, 58, 52, 255 }
+#define COLOR_TEXTO_TENUE  (Color){ 95, 92, 78, 255 }
 
-/* ============================================================
-   PANTALLAS Y PASOS DEL FORMULARIO
-   ============================================================ */
 typedef enum { PANTALLA_INTRO, PANTALLA_BIENVENIDA, PANTALLA_FORMULARIO, PANTALLA_RESULTADO } Pantalla;
 
 enum {
@@ -143,26 +112,10 @@ enum {
 
 typedef enum { SIN_TRANSICION, FUNDIENDO_SALIDA, FUNDIENDO_ENTRADA } EstadoFade;
 
-/* ============================================================
-   ESTADO GLOBAL DEL NOMBRE
-   ------------------------------------------------------------
-   Antes "nombre" y "letrasNombre" eran variables locales dentro
-   de main(). Se movieron a globales porque, en la version web,
-   la funcion ActualizarNombreDesdeJS() (llamada desde el <input>
-   invisible en HTML) necesita poder escribir en ellas desde
-   afuera del bucle principal.
-   ============================================================ */
 char nombre[32] = "";
 int letrasNombre = 0;
 
 #ifdef __EMSCRIPTEN__
-/* ------------------------------------------------------------
-   Funcion que JavaScript puede llamar (via Module.ccall) cada
-   vez que el usuario escribe algo en el <input> invisible del
-   HTML. Esto es lo que permite que el teclado tactil del celular
-   funcione, ya que un <canvas> no puede abrir el teclado por si
-   solo.
-   ------------------------------------------------------------ */
 EMSCRIPTEN_KEEPALIVE
 void ActualizarNombreDesdeJS(const char *texto) {
     strncpy(nombre, texto, 31);
@@ -171,9 +124,6 @@ void ActualizarNombreDesdeJS(const char *texto) {
 }
 #endif
 
-/* ============================================================
-   FUNCIONES DE DIBUJO REUTILIZABLES
-   ============================================================ */
 Font fuente;
 
 void texto(const char *msg, int x, int y, int tam, Color color) {
@@ -185,8 +135,6 @@ void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
     DrawTextEx(fuente, msg, (Vector2){ centroX - medida.x / 2.0f, (float)y }, (float)tam, 1.0f, color);
 }
 
-/* Boton de opcion unica, ahora con una letra (A, B, C...) en un
-   cuadrito a la izquierda, igual que en la referencia que vimos. */
 int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionado) {
     Color fondo = seleccionado ? COLOR_ACENTO : (Color){255,255,255,255};
     Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
@@ -194,7 +142,6 @@ int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionad
     DrawRectangleRounded(rect, 0.3f, 8, fondo);
     if (!seleccionado) DrawRectangleRoundedLines(rect, 0.3f, 8, 2.0f, COLOR_BORDE);
 
-    /* Cuadrito con la letra */
     Rectangle cajaLetra = { rect.x + 10, rect.y + rect.height/2 - 14, 28, 28 };
     Color fondoLetra = seleccionado ? (Color){255,255,255,90} : COLOR_TARJETA;
     DrawRectangleRounded(cajaLetra, 0.3f, 6, fondoLetra);
@@ -207,10 +154,11 @@ int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionad
     texto(label, (int)rect.x + 50, (int)(rect.y + rect.height/2 - 9), 15, colorTxt);
 
     Vector2 m = GetMousePosition();
-    return (CheckCollisionPointRec(m, rect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON));
+    int presionado = CheckCollisionPointRec(m, rect) && 
+                     (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP));
+    return presionado;
 }
 
-/* Boton simple sin letra (para Atras/Siguiente/Continuar/etc.) */
 int boton(Rectangle rect, const char *label, int seleccionado) {
     Color fondo = seleccionado ? COLOR_ACENTO : (Color){255,255,255,255};
     Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
@@ -220,13 +168,15 @@ int boton(Rectangle rect, const char *label, int seleccionado) {
     texto(label, (int)rect.x + 14, (int)(rect.y + rect.height/2 - 9), 16, colorTxt);
 
     Vector2 m = GetMousePosition();
-    return (CheckCollisionPointRec(m, rect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON));
+    int presionado = CheckCollisionPointRec(m, rect) && 
+                     (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP));
+    return presionado;
 }
 
-/* Casilla tipo checkbox: independiente, no excluye a otras. */
 void casilla(Rectangle rect, const char *label, int *marcado) {
     Vector2 m = GetMousePosition();
-    if (CheckCollisionPointRec(m, rect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (CheckCollisionPointRec(m, rect) && 
+       (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP))) {
         *marcado = !(*marcado);
     }
 
@@ -246,9 +196,6 @@ void casilla(Rectangle rect, const char *label, int *marcado) {
     texto(label, (int)rect.x + 40, (int)(rect.y + rect.height/2 - 8), 14, colorTxt);
 }
 
-/* ============================================================
-   NAVEGACION DEL FORMULARIO (maneja el salto condicional)
-   ============================================================ */
 int siguientePaso(int paso, RespuestasUsuario r) {
     if (paso == PASO_TRANSPORTE) {
         return (r.transporte == 1) ? PASO_DUCHA : PASO_TIEMPO;
@@ -285,14 +232,6 @@ int pasoValido(int paso, RespuestasUsuario r) {
     return 0;
 }
 
-/* ============================================================
-   ENVIO A GOOGLE SHEETS
-   ------------------------------------------------------------
-   En la version web (Emscripten), EM_JS manda la peticion HTTP
-   real. En escritorio no existe forma de hacer eso (ni falta
-   que la haga), asi que se deja una version "vacia" que no hace
-   nada, solo para que el mismo codigo compile en ambos casos.
-   ============================================================ */
 #ifdef __EMSCRIPTEN__
 EM_JS(void, EnviarAGoogleSheets,
     (const char *nombre, float total, float transp, float agua,
@@ -316,14 +255,10 @@ EM_JS(void, EnviarAGoogleSheets,
 #else
 void EnviarAGoogleSheets(const char *nombre, float total, float transp,
                           float agua, float elec, float aire, float gas) {
-    /* En escritorio no se envia nada; solo se deja constancia en consola. */
     printf("[Google Sheets omitido en escritorio] %s -> %.2f kg CO2\n", nombre, total);
 }
 #endif
 
-/* ============================================================
-   PROGRAMA PRINCIPAL
-   ============================================================ */
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
 
@@ -331,7 +266,6 @@ int main(void) {
     InitWindow(ANCHO, ALTO, "Calculadora de Huella de Carbono");
     SetTargetFPS(60);
 
-    /* Fuente con soporte de acentos y enye (antes solo ASCII basico) */
     int totalCodepoints = 0;
     int *codepoints = LoadCodepoints(
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -419,9 +353,7 @@ int main(void) {
         /* ===================== BIENVENIDA ===================== */
         else if (pantallaActual == PANTALLA_BIENVENIDA) {
 
-            /* Icono corregido: antes se dibujaba a 512x512 completo
-               y tapaba el titulo. Ahora se escala a ~120x120. */
-            float escalaIcono = 0.234f; // 512 * 0.234 = ~120px
+            float escalaIcono = 0.234f;
             DrawTextureEx(iconoBienvenida, (Vector2){ ANCHO/2 - 60, 40 }, 0, escalaIcono, WHITE);
 
             textoCentrado("Calculadora de Huella", ANCHO/2, 176, 19, COLOR_TEXTO);
@@ -440,10 +372,6 @@ int main(void) {
                 texto(nombre, (int)campoNombre.x + 14, (int)campoNombre.y + 13, 16, COLOR_TEXTO);
             }
 
-            /* Entrada de teclado FISICO (escritorio y navegador con
-               teclado conectado). En movil, el texto llega por otra
-               via: ActualizarNombreDesdeJS(), llamada desde el
-               <input> invisible del HTML. */
             if (!bloqueadoPorFade) {
                 int tecla = GetCharPressed();
                 while (tecla > 0) {
@@ -460,17 +388,20 @@ int main(void) {
                 }
             }
 
-            int nombreListo = (letrasNombre >= 2);
             Rectangle btnIniciar = { 40, 380, ANCHO - 80, 48 };
-            Color colorBtn = nombreListo ? COLOR_ACENTO : (Color){255,255,255,255};
-            DrawRectangleRounded(btnIniciar, 0.3f, 8, colorBtn);
-            if (!nombreListo) DrawRectangleRoundedLines(btnIniciar, 0.3f, 8, 2.0f, COLOR_BORDE_FUERTE);
-            textoCentrado("Iniciar test", ANCHO/2, (int)btnIniciar.y + 14, 16,
-                nombreListo ? COLOR_ACENTO_TXT : COLOR_TEXTO_TENUE);
+            DrawRectangleRounded(btnIniciar, 0.3f, 8, COLOR_ACENTO);
+            textoCentrado("Iniciar test", ANCHO/2, (int)btnIniciar.y + 14, 16, COLOR_ACENTO_TXT);
 
-            if (!bloqueadoPorFade && nombreListo) {
+            if (!bloqueadoPorFade) {
                 Vector2 m = GetMousePosition();
-                if (CheckCollisionPointRec(m, btnIniciar) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                if (CheckCollisionPointRec(m, btnIniciar) && 
+                   (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP))) {
+                    
+                    if (letrasNombre < 2) {
+                        strcpy(nombre, "Invitado");
+                        letrasNombre = 8;
+                    }
+
                     fade = FUNDIENDO_SALIDA;
                     alphaFade = 0.0f;
                     pantallaDestino = PANTALLA_FORMULARIO;
@@ -503,8 +434,8 @@ int main(void) {
                 case PASO_DUCHA:        iconoActual = iconoAgua;         pregunta = "Como es tu ducha diaria?"; break;
                 case PASO_AGUA_EXTRA:   iconoActual = iconoAgua;         pregunta = "Usos adicionales de agua"; break;
                 case PASO_ELECTRICIDAD: iconoActual = iconoElectricidad; pregunta = "Cuanto pagas de luz al mes?"; break;
-                case PASO_AC:           iconoActual = iconoAire;         pregunta = "Uso de aire acondicionado?"; break;
-                case PASO_GAS:          iconoActual = iconoGas;          pregunta = "Que usas para cocinar?"; break;
+                case PASO_AC:            iconoActual = iconoAire;         pregunta = "Uso de aire acondicionado?"; break;
+                case PASO_GAS:           iconoActual = iconoGas;          pregunta = "Que usas para cocinar?"; break;
             }
 
             DrawRectangleRounded((Rectangle){ 30, 74, ANCHO - 60, 92 }, 0.15f, 8, COLOR_TARJETA);
@@ -515,8 +446,8 @@ int main(void) {
             texto(pregunta, 108, 112, 15, COLOR_TEXTO);
 
             int hayRespuesta = 0;
-            const int ESPACIADO = 68;   // antes 62: mas aire entre opciones
-            const int ALTO_OPCION = 54; // antes 50
+            const int ESPACIADO = 68;
+            const int ALTO_OPCION = 54;
 
             if (paso == PASO_TRANSPORTE) {
                 const char *ops[4] = {"A pie / Bicicleta", "Autobus / Metro", "Auto propio", "Motocicleta"};
@@ -702,15 +633,17 @@ int main(void) {
             }
         }
 
+        /* Capa de Transicion (Fade) */
         if (fade != SIN_TRANSICION) {
             Color overlay = COLOR_FONDO;
-            overlay.a = (unsigned char)(alphaFade * 255);
+            overlay.a = (unsigned char)(alphaFade * 255.0f);
             DrawRectangle(0, 0, ANCHO, ALTO, overlay);
         }
 
         EndDrawing();
     }
 
+    /* Descargar recursos */
     UnloadFont(fuente);
     UnloadTexture(iconoBienvenida);
     UnloadTexture(iconoTransporte);
