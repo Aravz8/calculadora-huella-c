@@ -30,6 +30,7 @@
 #include "raylib.h"
 #include <stdio.h>
 #include <string.h>
+#include <emscripten.h>
 
 /* ============================================================
    DATOS Y CALCULO (identico en logica a la version de consola)
@@ -239,6 +240,29 @@ int pasoValido(int paso, RespuestasUsuario r) {
     }
     return 0;
 }
+
+/* Envia el resultado al Apps Script. EM_JS evita construir codigo
+   JavaScript con snprintf, por lo que los nombres con tildes, comillas
+   o apostrofes se serializan correctamente. */
+EM_JS(void, EnviarAGoogleSheets,
+    (const char *nombre, float total, float transp, float agua,
+     float elec, float aire, float gas), {
+    const datos = {
+        nombre: UTF8ToString(nombre),
+        total_co2: total,
+        transporte: transp,
+        agua: agua,
+        electricidad: elec,
+        aire: aire,
+        gas: gas
+    };
+
+    fetch('https://script.google.com/macros/s/AKfycbxljlbV7QdpL6Dn83wmn03QWMGPCFZSG7USIQ_2MaZNhWbkqT6i0ilmBUJ6zVeKox7s/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(datos)
+    }).catch(error => console.error('Error al enviar a Google Sheets:', error));
+});
 
 /* ============================================================
    PROGRAMA PRINCIPAL
@@ -476,6 +500,15 @@ int main(void) {
                 if (!bloqueadoPorFade && boton(btnSiguiente, labelBtn, 1)) {
                     if (paso == PASO_GAS) {
                         resultado = calcular_huella(respuestas);
+                        EnviarAGoogleSheets(
+                            nombre,
+                            resultado.co2_total,
+                            resultado.co2_transporte,
+                            resultado.co2_agua,
+                            resultado.co2_electricidad,
+                            resultado.co2_ac,
+                            resultado.co2_gas
+                        );
                         fade = FUNDIENDO_SALIDA;
                         alphaFade = 0.0f;
                         pantallaDestino = PANTALLA_RESULTADO;
