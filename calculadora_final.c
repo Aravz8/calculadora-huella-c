@@ -1,5 +1,5 @@
 /* ============================================================
-   CALCULADORA DE HUELLA DE CARBONO PERSONAL - UI & Font Fix
+   CALCULADORA DE HUELLA DE CARBONO PERSONAL - RESPONSIVE DESKTOP
    ============================================================ */
 
 #include "raylib.h"
@@ -137,7 +137,6 @@ EM_JS(void, OcultarTecladoJS, (), {
 void OcultarTecladoJS() {}
 #endif
 
-/* Dos fuentes para evitar la distorsión de píxeles */
 Font fuenteGrande;
 Font fuenteMediana;
 
@@ -283,7 +282,6 @@ void EnviarAGoogleSheets(const char *nombre, float total, float transp,
 int main(void) {
     SetConfigFlags(FLAG_WINDOW_HIGHDPI | FLAG_WINDOW_RESIZABLE);
 
-    /* Dimensión base flexible */
     InitWindow(800, 800, "Calculadora de Huella de Carbono");
     SetGesturesEnabled(GESTURE_TAP);
     SetTargetFPS(60);
@@ -293,7 +291,6 @@ int main(void) {
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         "áéíóúñÁÉÍÓÚÑ¿¡üÜ", &totalCodepoints);
     
-    /* Cargamos 2 tamaños dedicados para máxima nitidez */
     fuenteGrande  = LoadFontEx("recursos/Nunito-Regular.ttf", 36, codepoints, totalCodepoints);
     fuenteMediana = LoadFontEx("recursos/Nunito-Regular.ttf", 20, codepoints, totalCodepoints);
     UnloadCodepoints(codepoints);
@@ -321,16 +318,15 @@ int main(void) {
 
         float dt = GetFrameTime();
 
-        /* Cálculo dinámico para adaptar diseño a Monitor o Celular */
         int anchoVentana = GetScreenWidth();
         int altoVentana = GetScreenHeight();
 
-        /* Si el ancho de pantalla es grande (Monitor), usamos un contenedor más ancho */
-        int ANCHO = (anchoVentana > 650) ? 580 : (anchoVentana - 40);
+        /* Deteccion de Monitor vs Movil */
+        int esMonitor = (anchoVentana >= 680);
+        int ANCHO = esMonitor ? 720 : (anchoVentana - 40);
         if (ANCHO < 340) ANCHO = 340;
-        int ALTO = 760;
+        int ALTO = 680;
 
-        /* Centrado del contenedor */
         int offsetX = (anchoVentana - ANCHO) / 2;
 
         if (fade == FUNDIENDO_SALIDA) {
@@ -352,9 +348,8 @@ int main(void) {
         BeginDrawing();
         ClearBackground(COLOR_FONDO);
 
-        /* Dibujar Tarjeta Principal Centrada */
-        Rectangle tarjetaPrincipal = { (float)offsetX, 20, (float)ANCHO, (float)(ALTO - 40) };
-        DrawRectangleRounded(tarjetaPrincipal, 0.04f, 8, (Color){255,255,255,200});
+        Rectangle tarjetaPrincipal = { (float)offsetX, 40, (float)ANCHO, (float)(ALTO - 40) };
+        DrawRectangleRounded(tarjetaPrincipal, 0.04f, 8, (Color){255,255,255,220});
         DrawRectangleRoundedLines(tarjetaPrincipal, 0.04f, 8, 2.0f, COLOR_BORDE);
 
         int centroX = offsetX + ANCHO / 2;
@@ -362,28 +357,27 @@ int main(void) {
         /* ===================== INTRODUCCION ===================== */
         if (pantallaActual == PANTALLA_INTRO) {
 
-            textoCentrado("Bienvenido a la Calculadora", centroX, 70, 24, COLOR_TEXTO);
-            textoCentrado("de Huella de Carbono", centroX, 102, 24, COLOR_TEXTO);
+            textoCentrado("Bienvenido a la Calculadora de Huella de Carbono", centroX, 80, 24, COLOR_TEXTO);
 
             const char *parrafo[8] = {
-                "La huella de carbono es la cantidad de gases de efecto",
-                "invernadero que generamos con nuestras actividades diarias:",
-                "como nos movemos, cuanta agua y electricidad usamos,",
+                "La huella de carbono es la cantidad de gases de efecto invernadero que generamos",
+                "con nuestras actividades diarias: como nos movemos, cuanta agua y electricidad usamos,",
                 "y como cocinamos.",
                 "",
-                "Responde 7 preguntas rapidas sobre tu dia y descubre",
-                "tu impacto ambiental, con recomendaciones claras",
-                "para reducirlo."
+                "Responde 7 preguntas rapidas sobre tu dia y descubre tu impacto ambiental,",
+                "con recomendaciones claras para reducirlo.",
+                "",
+                ""
             };
-            int y = 170;
+            int y = 160;
             for (int i = 0; i < 8; i++) {
                 if (parrafo[i][0] != '\0') {
                     textoCentrado(parrafo[i], centroX, y, 17, COLOR_TEXTO_TENUE);
                 }
-                y += 26;
+                y += 28;
             }
 
-            Rectangle btnContinuar = { offsetX + 40, 480, ANCHO - 80, 52 };
+            Rectangle btnContinuar = { centroX - 140, 480, 280, 52 };
             int clickContinuar = boton(btnContinuar, "Continuar", 1);
             if (!bloqueadoPorFade && clickContinuar) {
                 fade = FUNDIENDO_SALIDA;
@@ -396,14 +390,16 @@ int main(void) {
         else if (pantallaActual == PANTALLA_BIENVENIDA) {
 
             float escalaIcono = 0.28f;
-            DrawTextureEx(iconoBienvenida, (Vector2){ centroX - 70, 60 }, 0, escalaIcono, WHITE);
+            DrawTextureEx(iconoBienvenida, (Vector2){ centroX - 70, 70 }, 0, escalaIcono, WHITE);
 
-            textoCentrado("Calculadora de Huella", centroX, 220, 26, COLOR_TEXTO);
-            textoCentrado("de Carbono Personal", centroX, 252, 26, COLOR_TEXTO);
-            textoCentrado("Responde 7 preguntas rapidas sobre tus actividades de hoy", centroX, 295, 16, COLOR_TEXTO_TENUE);
+            textoCentrado("Calculadora de Huella de Carbono Personal", centroX, 230, 26, COLOR_TEXTO);
+            textoCentrado("Responde 7 preguntas rapidas sobre tus actividades de hoy", centroX, 275, 16, COLOR_TEXTO_TENUE);
 
-            texto("Tu nombre:", offsetX + 40, 345, 16, COLOR_TEXTO_TENUE);
-            Rectangle campoNombre = { offsetX + 40, 370, ANCHO - 80, 50 };
+            int anchoCampo = esMonitor ? 380 : (ANCHO - 80);
+            int xCampo = centroX - (anchoCampo / 2);
+
+            texto("Tu nombre:", xCampo, 335, 16, COLOR_TEXTO_TENUE);
+            Rectangle campoNombre = { xCampo, 360, anchoCampo, 50 };
             DrawRectangleRounded(campoNombre, 0.2f, 8, (Color){255,255,255,255});
             DrawRectangleRoundedLines(campoNombre, 0.2f, 8, 2.0f, COLOR_BORDE);
 
@@ -438,7 +434,7 @@ int main(void) {
                 }
             }
 
-            Rectangle btnIniciar = { offsetX + 40, 450, ANCHO - 80, 52 };
+            Rectangle btnIniciar = { centroX - 140, 440, 280, 52 };
             int clickIniciar = boton(btnIniciar, "Iniciar test", 1);
 
             if (!bloqueadoPorFade && clickIniciar) {
@@ -456,7 +452,7 @@ int main(void) {
             }
         }
 
-        /* ===================== FORMULARIO ===================== */
+        /* ===================== FORMULARIO (DISTRIBUCIÓN 2 COLUMNAS EN MONITOR) ===================== */
         else if (pantallaActual == PANTALLA_FORMULARIO) {
 
             int totalVisible = totalPasosVisibles(respuestas);
@@ -464,19 +460,19 @@ int main(void) {
             float progreso = (idxVisible + 1) / (float)totalVisible;
             if (progreso > 1.0f) progreso = 1.0f;
 
-            DrawRectangleRounded((Rectangle){ offsetX + 30, 45, ANCHO - 60, 10 }, 0.5f, 4, COLOR_BORDE);
-            DrawRectangleRounded((Rectangle){ offsetX + 30, 45, (ANCHO - 60) * progreso, 10 }, 0.5f, 4, COLOR_ACENTO);
+            DrawRectangleRounded((Rectangle){ offsetX + 30, 65, ANCHO - 60, 10 }, 0.5f, 4, COLOR_BORDE);
+            DrawRectangleRounded((Rectangle){ offsetX + 30, 65, (ANCHO - 60) * progreso, 10 }, 0.5f, 4, COLOR_ACENTO);
 
             char etiquetaProgreso[16];
             sprintf(etiquetaProgreso, "%d%%", (int)(progreso * 100));
-            texto(etiquetaProgreso, offsetX + ANCHO - 65, 60, 15, COLOR_TEXTO_TENUE);
+            texto(etiquetaProgreso, offsetX + ANCHO - 65, 80, 15, COLOR_TEXTO_TENUE);
 
             Texture2D iconoActual = iconoTransporte;
             const char *pregunta = "";
 
             switch (paso) {
                 case PASO_TRANSPORTE:    iconoActual = iconoTransporte;   pregunta = "Como te transportaste hoy?"; break;
-                case PASO_TIEMPO:        iconoActual = iconoTransporte;   pregunta = "Cuanto dura tu trayecto (ida y vuelta)?"; break;
+                case PASO_TIEMPO:        iconoActual = iconoTransporte;   pregunta = "Cuanto dura tu trayecto?"; break;
                 case PASO_DUCHA:         iconoActual = iconoAgua;         pregunta = "Como es tu ducha diaria?"; break;
                 case PASO_AGUA_EXTRA:    iconoActual = iconoAgua;         pregunta = "Usos adicionales de agua"; break;
                 case PASO_ELECTRICIDAD: iconoActual = iconoElectricidad; pregunta = "Cuanto pagas de luz al mes?"; break;
@@ -484,21 +480,43 @@ int main(void) {
                 case PASO_GAS:           iconoActual = iconoGas;          pregunta = "Que usas para cocinar?"; break;
             }
 
-            DrawRectangleRounded((Rectangle){ offsetX + 30, 90, ANCHO - 60, 100 }, 0.15f, 8, COLOR_TARJETA);
-            DrawTextureEx(iconoActual, (Vector2){ offsetX + 45, 105 }, 0, 0.13f, WHITE);
-            
-            char etiquetaPaso[32];
-            sprintf(etiquetaPaso, "Pregunta %d de %d", idxVisible + 1, totalVisible);
-            texto(etiquetaPaso, offsetX + 120, 108, 15, COLOR_TEXTO_TENUE);
-            texto(pregunta, offsetX + 120, 134, 18, COLOR_TEXTO);
+            int posX_Opciones, anchoOpciones, posY_Opciones;
 
-            const int ESPACIADO = 72;
-            const int ALTO_OPCION = 58;
+            if (esMonitor) {
+                /* Layout Monitor: Pregunta a la izquierda (Columna 1), Opciones a la derecha (Columna 2) */
+                DrawRectangleRounded((Rectangle){ offsetX + 40, 120, 260, 360 }, 0.08f, 8, COLOR_TARJETA);
+                DrawTextureEx(iconoActual, (Vector2){ offsetX + 130, 160 }, 0, 0.22f, WHITE);
+                
+                char etiquetaPaso[32];
+                sprintf(etiquetaPaso, "Pregunta %d de %d", idxVisible + 1, totalVisible);
+                textoCentrado(etiquetaPaso, offsetX + 170, 260, 16, COLOR_TEXTO_TENUE);
+                textoCentrado(pregunta, offsetX + 170, 290, 19, COLOR_TEXTO);
+
+                posX_Opciones = offsetX + 320;
+                anchoOpciones = ANCHO - 360;
+                posY_Opciones = 120;
+            } else {
+                /* Layout Movil: Vertical apilado */
+                DrawRectangleRounded((Rectangle){ offsetX + 30, 100, ANCHO - 60, 90 }, 0.15f, 8, COLOR_TARJETA);
+                DrawTextureEx(iconoActual, (Vector2){ offsetX + 45, 112 }, 0, 0.13f, WHITE);
+                
+                char etiquetaPaso[32];
+                sprintf(etiquetaPaso, "Pregunta %d de %d", idxVisible + 1, totalVisible);
+                texto(etiquetaPaso, offsetX + 120, 115, 15, COLOR_TEXTO_TENUE);
+                texto(pregunta, offsetX + 120, 140, 18, COLOR_TEXTO);
+
+                posX_Opciones = offsetX + 30;
+                anchoOpciones = ANCHO - 60;
+                posY_Opciones = 210;
+            }
+
+            const int ESPACIADO = 68;
+            const int ALTO_OPCION = 56;
 
             if (paso == PASO_TRANSPORTE) {
                 const char *ops[4] = {"A pie / Bicicleta", "Autobus / Metro", "Auto propio", "Motocicleta"};
                 for (int i = 0; i < 4; i++) {
-                    Rectangle r = { offsetX + 30, 215 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { posX_Opciones, posY_Opciones + i*ESPACIADO, anchoOpciones, ALTO_OPCION };
                     int sel = (respuestas.transporte == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.transporte = i+1;
                 }
@@ -506,7 +524,7 @@ int main(void) {
             else if (paso == PASO_TIEMPO) {
                 const char *ops[4] = {"Menos de 30 min", "30 min a 1h30", "1h30 a 3h (tranque)", "Mas de 3h"};
                 for (int i = 0; i < 4; i++) {
-                    Rectangle r = { offsetX + 30, 215 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { posX_Opciones, posY_Opciones + i*ESPACIADO, anchoOpciones, ALTO_OPCION };
                     int sel = (respuestas.tiempo_trayecto == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.tiempo_trayecto = i+1;
                 }
@@ -514,14 +532,14 @@ int main(void) {
             else if (paso == PASO_DUCHA) {
                 const char *ops[3] = {"Corta (menos de 5 min)", "Promedio (5 a 10 min)", "Larga (mas de 10 min)"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { offsetX + 30, 215 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { posX_Opciones, posY_Opciones + i*ESPACIADO, anchoOpciones, ALTO_OPCION };
                     int sel = (respuestas.ducha == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.ducha = i+1;
                 }
             }
             else if (paso == PASO_AGUA_EXTRA) {
-                Rectangle r1 = { offsetX + 30, 215, ANCHO - 60, ALTO_OPCION };
-                Rectangle r2 = { offsetX + 30, 215 + ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                Rectangle r1 = { posX_Opciones, posY_Opciones, anchoOpciones, ALTO_OPCION };
+                Rectangle r2 = { posX_Opciones, posY_Opciones + ESPACIADO, anchoOpciones, ALTO_OPCION };
                 if (!bloqueadoPorFade) {
                     casilla(r1, "Riego jardin frecuente", &respuestas.riego);
                     casilla(r2, "Lavo mi auto con manguera", &respuestas.lavado_auto);
@@ -530,7 +548,7 @@ int main(void) {
             else if (paso == PASO_ELECTRICIDAD) {
                 const char *ops[3] = {"Menos de $30 al mes", "$30 a $70 al mes", "Mas de $70 al mes"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { offsetX + 30, 215 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { posX_Opciones, posY_Opciones + i*ESPACIADO, anchoOpciones, ALTO_OPCION };
                     int sel = (respuestas.electricidad == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.electricidad = i+1;
                 }
@@ -538,7 +556,7 @@ int main(void) {
             else if (paso == PASO_AC) {
                 const char *ops[3] = {"No uso (ventilacion natural)", "Moderado (1 a 4 horas)", "Intensivo (+5 horas)"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { offsetX + 30, 215 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { posX_Opciones, posY_Opciones + i*ESPACIADO, anchoOpciones, ALTO_OPCION };
                     int sel = (respuestas.ac == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.ac = i+1;
                 }
@@ -546,7 +564,7 @@ int main(void) {
             else if (paso == PASO_GAS) {
                 const char *ops[3] = {"Gas en tanque (Gas LP)", "Estufa electrica/induccion", "Casi no cocino en casa"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { offsetX + 30, 215 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { posX_Opciones, posY_Opciones + i*ESPACIADO, anchoOpciones, ALTO_OPCION };
                     int sel = (respuestas.gas == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.gas = i+1;
                 }
@@ -554,8 +572,8 @@ int main(void) {
 
             int hayRespuesta = pasoValido(paso, respuestas);
 
-            Rectangle btnAtras = { offsetX + 30, ALTO - 90, 130, 50 };
-            Rectangle btnSiguiente = { offsetX + ANCHO - 160, ALTO - 90, 130, 50 };
+            Rectangle btnAtras = { offsetX + 40, ALTO - 80, 130, 50 };
+            Rectangle btnSiguiente = { offsetX + ANCHO - 170, ALTO - 80, 130, 50 };
 
             if (paso != PASO_TRANSPORTE) {
                 if (!bloqueadoPorFade && boton(btnAtras, "Atras", 0)) {
@@ -587,79 +605,122 @@ int main(void) {
             }
         }
 
-        /* ===================== RESULTADO ===================== */
+        /* ===================== RESULTADO (2 COLUMNAS EN MONITOR) ===================== */
         else if (pantallaActual == PANTALLA_RESULTADO) {
 
-            char saludo[80];
-            sprintf(saludo, "%s, tu resultado es:", nombre);
-            texto(saludo, offsetX + 30, 60, 18, COLOR_TEXTO_TENUE);
+            if (esMonitor) {
+                /* Columna Izquierda: Total + Recomendacion */
+                char saludo[80];
+                sprintf(saludo, "%s, tu resultado es:", nombre);
+                texto(saludo, offsetX + 40, 80, 18, COLOR_TEXTO_TENUE);
 
-            char textoTotal[32];
-            sprintf(textoTotal, "%.1f kg CO2e/dia", resultado.co2_total);
-            texto(textoTotal, offsetX + 30, 88, 32, COLOR_TEXTO);
+                char textoTotal[32];
+                sprintf(textoTotal, "%.1f kg CO2e/dia", resultado.co2_total);
+                texto(textoTotal, offsetX + 40, 108, 30, COLOR_TEXTO);
 
-            const char *nivel; Color colorNivel;
-            if (resultado.co2_total < 4.0f)      { nivel = "IMPACTO BAJO";      colorNivel = COLOR_MINT; }
-            else if (resultado.co2_total <= 9.0f){ nivel = "IMPACTO MODERADO";  colorNivel = COLOR_BORDE; }
-            else                                  { nivel = "IMPACTO ALTO";      colorNivel = COLOR_ROSA; }
+                const char *nivel; Color colorNivel;
+                if (resultado.co2_total < 4.0f)      { nivel = "IMPACTO BAJO";      colorNivel = COLOR_MINT; }
+                else if (resultado.co2_total <= 9.0f){ nivel = "IMPACTO MODERADO";  colorNivel = COLOR_BORDE; }
+                else                                  { nivel = "IMPACTO ALTO";      colorNivel = COLOR_ROSA; }
 
-            Vector2 medidaNivel = MeasureTextEx(fuenteMediana, nivel, 16, 1.0f);
-            Rectangle badge = { offsetX + 30, 138, medidaNivel.x + 30, 36 };
-            DrawRectangleRounded(badge, 0.5f, 8, colorNivel);
-            texto(nivel, offsetX + 45, 146, 16, COLOR_TEXTO);
+                Vector2 medidaNivel = MeasureTextEx(fuenteMediana, nivel, 16, 1.0f);
+                Rectangle badge = { offsetX + 40, 155, medidaNivel.x + 30, 36 };
+                DrawRectangleRounded(badge, 0.5f, 8, colorNivel);
+                texto(nivel, offsetX + 55, 163, 16, COLOR_TEXTO);
 
-            DrawRectangleRounded((Rectangle){ offsetX + 30, 195, ANCHO - 60, 160 }, 0.1f, 8, COLOR_TARJETA);
-            char linea[48];
-            sprintf(linea, "Transporte:    %.2f kg CO2", resultado.co2_transporte);
-            texto(linea, offsetX + 50, 212, 17, COLOR_TEXTO);
-            sprintf(linea, "Agua:          %.2f kg CO2", resultado.co2_agua);
-            texto(linea, offsetX + 50, 242, 17, COLOR_TEXTO);
-            sprintf(linea, "Electricidad:  %.2f kg CO2", resultado.co2_electricidad);
-            texto(linea, offsetX + 50, 272, 17, COLOR_TEXTO);
-            sprintf(linea, "Aire Ac.:      %.2f kg CO2", resultado.co2_ac);
-            texto(linea, offsetX + 50, 302, 17, COLOR_TEXTO);
-            sprintf(linea, "Gas cocina:    %.2f kg CO2", resultado.co2_gas);
-            texto(linea, offsetX + 50, 332, 17, COLOR_TEXTO);
+                DrawRectangleRounded((Rectangle){ offsetX + 40, 220, 300, 260 }, 0.08f, 8, COLOR_TARJETA);
 
-            DrawRectangleRounded((Rectangle){ offsetX + 30, 375, ANCHO - 60, 140 }, 0.1f, 8, COLOR_TARJETA);
+                if (resultado.co2_total < 4.0f) {
+                    DrawTextureEx(iconoPlanta, (Vector2){ offsetX + 150, 250 }, 0, 0.15f, WHITE);
+                    textoCentrado("Sigue asi! Tu huella esta entre", offsetX + 190, 350, 16, COLOR_TEXTO);
+                    textoCentrado("las mas bajas posibles.", offsetX + 190, 375, 16, COLOR_TEXTO);
+                } else {
+                    float mayor = resultado.co2_transporte;
+                    Texture2D iconoTip = iconoTransporte;
+                    const char *tip1 = "Revisa la presion de tus llantas";
+                    const char *tip2 = "y evita acelerar de golpe.";
 
-            if (resultado.co2_total < 4.0f) {
-                DrawTextureEx(iconoPlanta, (Vector2){ offsetX + 45, 395 }, 0, 0.1f, WHITE);
-                texto("Sigue asi! Tu huella esta entre", offsetX + 120, 405, 16, COLOR_TEXTO);
-                texto("las mas bajas posibles.", offsetX + 120, 430, 16, COLOR_TEXTO);
+                    if (resultado.co2_agua > mayor) {
+                        mayor = resultado.co2_agua; iconoTip = iconoAgua;
+                        tip1 = "Cerrar la llave al enjabonarte";
+                        tip2 = "ahorra hasta 40% de agua.";
+                    }
+                    if (resultado.co2_electricidad > mayor) {
+                        mayor = resultado.co2_electricidad; iconoTip = iconoElectricidad;
+                        tip1 = "Apaga luces sin usar y";
+                        tip2 = "cambia a focos LED.";
+                    }
+                    if (resultado.co2_ac > mayor) {
+                        mayor = resultado.co2_ac; iconoTip = iconoAire;
+                        tip1 = "Sube el termostato a 24:";
+                        tip2 = "mismo confort, menos gasto.";
+                    }
+                    if (resultado.co2_gas > mayor) {
+                        mayor = resultado.co2_gas; iconoTip = iconoGas;
+                        tip1 = "Usar ollas con tapa reduce";
+                        tip2 = "el consumo de gas.";
+                    }
+
+                    DrawTextureEx(iconoTip, (Vector2){ offsetX + 150, 250 }, 0, 0.15f, WHITE);
+                    textoCentrado(tip1, offsetX + 190, 360, 16, COLOR_TEXTO);
+                    textoCentrado(tip2, offsetX + 190, 385, 16, COLOR_TEXTO);
+                }
+
+                /* Columna Derecha: Desglose */
+                DrawRectangleRounded((Rectangle){ offsetX + 360, 80, 320, 400 }, 0.08f, 8, COLOR_TARJETA);
+                texto("Desglose de Emisiones", offsetX + 380, 100, 20, COLOR_TEXTO);
+
+                char linea[48];
+                sprintf(linea, "Transporte:     %.2f kg CO2", resultado.co2_transporte);
+                texto(linea, offsetX + 380, 150, 16, COLOR_TEXTO);
+                sprintf(linea, "Agua:           %.2f kg CO2", resultado.co2_agua);
+                texto(linea, offsetX + 380, 200, 16, COLOR_TEXTO);
+                sprintf(linea, "Electricidad:   %.2f kg CO2", resultado.co2_electricidad);
+                texto(linea, offsetX + 380, 250, 16, COLOR_TEXTO);
+                sprintf(linea, "Aire Ac.:       %.2f kg CO2", resultado.co2_ac);
+                texto(linea, offsetX + 380, 300, 16, COLOR_TEXTO);
+                sprintf(linea, "Gas cocina:     %.2f kg CO2", resultado.co2_gas);
+                texto(linea, offsetX + 380, 350, 16, COLOR_TEXTO);
+
             } else {
-                float mayor = resultado.co2_transporte;
-                Texture2D iconoTip = iconoTransporte;
-                const char *tip1 = "Revisa la presion de tus llantas";
-                const char *tip2 = "y evita frenar/acelerar de golpe.";
+                /* Layout Movil */
+                char saludo[80];
+                sprintf(saludo, "%s, tu resultado es:", nombre);
+                texto(saludo, offsetX + 30, 60, 18, COLOR_TEXTO_TENUE);
 
-                if (resultado.co2_agua > mayor) {
-                    mayor = resultado.co2_agua; iconoTip = iconoAgua;
-                    tip1 = "Cerrar la llave mientras te enjabonas";
-                    tip2 = "puede ahorrar hasta 40% del agua.";
-                }
-                if (resultado.co2_electricidad > mayor) {
-                    mayor = resultado.co2_electricidad; iconoTip = iconoElectricidad;
-                    tip1 = "Apaga luces/aparatos sin usar y";
-                    tip2 = "cambia a focos LED si puedes.";
-                }
-                if (resultado.co2_ac > mayor) {
-                    mayor = resultado.co2_ac; iconoTip = iconoAire;
-                    tip1 = "Sube el termostato de 20 a 24:";
-                    tip2 = "mismo confort, menos consumo.";
-                }
-                if (resultado.co2_gas > mayor) {
-                    mayor = resultado.co2_gas; iconoTip = iconoGas;
-                    tip1 = "Usar ollas con tapa y verificar fugas";
-                    tip2 = "en el tanque reduce el consumo.";
-                }
+                char textoTotal[32];
+                sprintf(textoTotal, "%.1f kg CO2e/dia", resultado.co2_total);
+                texto(textoTotal, offsetX + 30, 88, 30, COLOR_TEXTO);
 
-                DrawTextureEx(iconoTip, (Vector2){ offsetX + 45, 395 }, 0, 0.1f, WHITE);
-                texto(tip1, offsetX + 120, 405, 16, COLOR_TEXTO);
-                texto(tip2, offsetX + 120, 430, 16, COLOR_TEXTO);
+                const char *nivel; Color colorNivel;
+                if (resultado.co2_total < 4.0f)      { nivel = "IMPACTO BAJO";      colorNivel = COLOR_MINT; }
+                else if (resultado.co2_total <= 9.0f){ nivel = "IMPACTO MODERADO";  colorNivel = COLOR_BORDE; }
+                else                                  { nivel = "IMPACTO ALTO";      colorNivel = COLOR_ROSA; }
+
+                Vector2 medidaNivel = MeasureTextEx(fuenteMediana, nivel, 16, 1.0f);
+                Rectangle badge = { offsetX + 30, 132, medidaNivel.x + 30, 34 };
+                DrawRectangleRounded(badge, 0.5f, 8, colorNivel);
+                texto(nivel, offsetX + 45, 140, 16, COLOR_TEXTO);
+
+                DrawRectangleRounded((Rectangle){ offsetX + 30, 180, ANCHO - 60, 150 }, 0.1f, 8, COLOR_TARJETA);
+                char linea[48];
+                sprintf(linea, "Transporte:   %.2f kg CO2", resultado.co2_transporte);
+                texto(linea, offsetX + 45, 195, 16, COLOR_TEXTO);
+                sprintf(linea, "Agua:         %.2f kg CO2", resultado.co2_agua);
+                texto(linea, offsetX + 45, 222, 16, COLOR_TEXTO);
+                sprintf(linea, "Electricidad: %.2f kg CO2", resultado.co2_electricidad);
+                texto(linea, offsetX + 45, 249, 16, COLOR_TEXTO);
+                sprintf(linea, "Aire Ac.:     %.2f kg CO2", resultado.co2_ac);
+                texto(linea, offsetX + 45, 276, 16, COLOR_TEXTO);
+                sprintf(linea, "Gas cocina:   %.2f kg CO2", resultado.co2_gas);
+                texto(linea, offsetX + 45, 303, 16, COLOR_TEXTO);
+
+                DrawRectangleRounded((Rectangle){ offsetX + 30, 345, ANCHO - 60, 130 }, 0.1f, 8, COLOR_TARJETA);
+                DrawTextureEx(iconoPlanta, (Vector2){ offsetX + 45, 365 }, 0, 0.1f, WHITE);
+                texto("Sigue asi! Tu huella es sostenible.", offsetX + 115, 390, 16, COLOR_TEXTO);
             }
 
-            Rectangle btnReiniciar = { offsetX + 30, ALTO - 90, ANCHO - 60, 52 };
+            Rectangle btnReiniciar = { centroX - 140, ALTO - 80, 280, 52 };
             if (!bloqueadoPorFade && boton(btnReiniciar, "Volver a empezar", 1)) {
                 respuestas = (RespuestasUsuario){0,0,0,0,0,0,0,0};
                 letrasNombre = 0; nombre[0] = '\0';
@@ -669,7 +730,6 @@ int main(void) {
             }
         }
 
-        /* Capa de Transicion (Fade) */
         if (fade != SIN_TRANSICION) {
             Color overlay = COLOR_FONDO;
             overlay.a = (unsigned char)(alphaFade * 255.0f);
@@ -679,7 +739,6 @@ int main(void) {
         EndDrawing();
     }
 
-    /* Descargar recursos */
     UnloadFont(fuenteGrande);
     UnloadFont(fuenteMediana);
     UnloadTexture(iconoBienvenida);
