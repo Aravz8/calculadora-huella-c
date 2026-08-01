@@ -164,7 +164,7 @@ int boton(Rectangle rect, const char *label, int seleccionado) {
     Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
 
     DrawRectangleRounded(rect, 0.35f, 8, fondo);
-    if (!seleccionado) DrawRectangleRoundedLinesEx(rect, 0.35f, 8, 1.2f, COLOR_BORDE);
+    if (!seleccionado) DrawRectangleRoundedLines(rect, 0.35f, 8, 1.2f, COLOR_BORDE);
     texto(label, (int)rect.x + 14, (int)(rect.y + rect.height/2 - 9), 16, colorTxt);
 
     Vector2 m = GetMousePosition();
@@ -181,12 +181,12 @@ void casilla(Rectangle rect, const char *label, int *marcado) {
 
     Color fondo = *marcado ? COLOR_ACENTO : (Color){255,255,255,255};
     DrawRectangleRounded(rect, 0.3f, 8, fondo);
-    if (!*marcado) DrawRectangleRoundedLinesEx(rect, 0.3f, 8, 1.2f, COLOR_BORDE);
+    if (!*marcado) DrawRectangleRoundedLines(rect, 0.3f, 8, 1.2f, COLOR_BORDE);
 
     /* cuadrito de check a la izquierda */
     Rectangle caja = { rect.x + 12, rect.y + rect.height/2 - 9, 18, 18 };
     DrawRectangleRounded(caja, 0.3f, 6, (Color){255,255,255,255});
-    DrawRectangleRoundedLinesEx(caja, 0.3f, 6, 1.2f, COLOR_BORDE);
+    DrawRectangleRoundedLines(caja, 0.3f, 6, 1.2f, COLOR_BORDE);
     if (*marcado) {
         DrawLineEx((Vector2){caja.x+3, caja.y+9}, (Vector2){caja.x+7, caja.y+14}, 2.5f, COLOR_ACENTO_TXT);
         DrawLineEx((Vector2){caja.x+7, caja.y+14}, (Vector2){caja.x+15, caja.y+4}, 2.5f, COLOR_ACENTO_TXT);
@@ -311,7 +311,7 @@ int main(void) {
             texto("Tu nombre:", 40, 360, 13, COLOR_TEXTO_TENUE);
             Rectangle campoNombre = { 40, 380, ANCHO - 80, 44 };
             DrawRectangleRounded(campoNombre, 0.25f, 8, (Color){255,255,255,255});
-            DrawRectangleRoundedLinesEx(campoNombre, 0.25f, 8, 1.2f, COLOR_BORDE);
+            DrawRectangleRoundedLines(campoNombre, 0.25f, 8, 1.2f, COLOR_BORDE);
 
             if (letrasNombre == 0) {
                 texto("Escribe tu nombre...", (int)campoNombre.x + 14, (int)campoNombre.y + 13, 14, COLOR_TEXTO_TENUE);
