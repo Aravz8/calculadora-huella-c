@@ -121,6 +121,20 @@ void ActualizarNombreDesdeJS(const char *texto) {
     nombre[31] = '\0';
     letrasNombre = (int)strlen(nombre);
 }
+
+EM_JS(void, OcultarTecladoJS, (), {
+    var inputs = document.getElementsByTagName('input');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].blur();
+        inputs[i].style.display = 'none';
+        inputs[i].disabled = true;
+    }
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
+});
+#else
+void OcultarTecladoJS() {}
 #endif
 
 Font fuente;
@@ -401,6 +415,9 @@ int main(void) {
                     strcpy(nombre, "Invitado");
                     letrasNombre = 8;
                 }
+                
+                OcultarTecladoJS();
+
                 fade = FUNDIENDO_SALIDA;
                 alphaFade = 0.0f;
                 pantallaDestino = PANTALLA_FORMULARIO;
@@ -427,10 +444,10 @@ int main(void) {
             const char *pregunta = "";
 
             switch (paso) {
-                case PASO_TRANSPORTE:   iconoActual = iconoTransporte;   pregunta = "Como te transportaste hoy?"; break;
-                case PASO_TIEMPO:       iconoActual = iconoTransporte;   pregunta = "Cuanto dura tu trayecto (ida y vuelta)?"; break;
-                case PASO_DUCHA:        iconoActual = iconoAgua;         pregunta = "Como es tu ducha diaria?"; break;
-                case PASO_AGUA_EXTRA:   iconoActual = iconoAgua;         pregunta = "Usos adicionales de agua"; break;
+                case PASO_TRANSPORTE:    iconoActual = iconoTransporte;   pregunta = "Como te transportaste hoy?"; break;
+                case PASO_TIEMPO:        iconoActual = iconoTransporte;   pregunta = "Cuanto dura tu trayecto (ida y vuelta)?"; break;
+                case PASO_DUCHA:         iconoActual = iconoAgua;         pregunta = "Como es tu ducha diaria?"; break;
+                case PASO_AGUA_EXTRA:    iconoActual = iconoAgua;         pregunta = "Usos adicionales de agua"; break;
                 case PASO_ELECTRICIDAD: iconoActual = iconoElectricidad; pregunta = "Cuanto pagas de luz al mes?"; break;
                 case PASO_AC:            iconoActual = iconoAire;         pregunta = "Uso de aire acondicionado?"; break;
                 case PASO_GAS:           iconoActual = iconoGas;          pregunta = "Que usas para cocinar?"; break;
