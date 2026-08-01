@@ -35,7 +35,7 @@ jobs:
 
       - name: Compilar C a WASM
         run: |
-          emcc calculadora_final.c -o index.html -Os -Wall -I raylib_web/raylib-5.0_webassembly/include -L raylib_web/raylib-5.0_webassembly/lib -lraylib -s USE_GLFW=3 -s ASYNCIFY --preload-file recursos
+          emcc calculadora_final.c -o index.html -Os -Wall -I raylib_web/raylib-5.0_webassembly/include -L raylib_web/raylib-5.0_webassembly/lib -lraylib -s USE_GLFW=3 -s ASYNCIFY --preload-file recursos --shell-file shell_minimal.html
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v4
