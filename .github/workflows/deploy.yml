@@ -28,14 +28,15 @@ jobs:
         with:
           version: 3.1.50
 
-      - name: Descargar Raylib para Web
+      - name: Clonar Raylib fuente
         run: |
-          wget https://github.com/raysan5/raylib/releases/download/5.0/raylib-5.0_webassembly.tar.gz
-          tar -xvf raylib-5.0_webassembly.tar.gz
+          git clone --depth 1 https://github.com/raysan5/raylib.git raylib_src
+          cd raylib_src/src
+          make PLATFORM=PLATFORM_WEB -e
 
       - name: Compilar C a WASM
         run: |
-          emcc calculadora_final.c -o index.html -Os -Wall -I raylib-5.0_webassembly/include -L raylib-5.0_webassembly/lib -lraylib -s USE_GLFW=3 -s ASYNCIFY --preload-file recursos
+          emcc calculadora_final.c -o index.html -Os -Wall -I raylib_src/src -L raylib_src/src -lraylib -s USE_GLFW=3 -s ASYNCIFY --preload-file recursos
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v4
