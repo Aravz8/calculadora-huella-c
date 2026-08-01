@@ -257,7 +257,7 @@ EM_JS(void, EnviarAGoogleSheets,
         gas: gas
     };
 
-    fetch('https://script.google.com/macros/s/AKfycbxOmEh_JeDWnZB8s5aCHaBlrNxFe1E1a7vo4mMAgBv-lqUxXBipLe2fN7mfdqbPpsww/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbzcitzkWIn7-512uh3FktTHb4rZwsDp0iyZLkIFwQ8GwIFx1jcomJFvqsspOmbfUz-1/exec', {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify(datos)
