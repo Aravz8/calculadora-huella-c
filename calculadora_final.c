@@ -192,7 +192,7 @@ int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionad
     Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
 
     DrawRectangleRounded(rect, 0.3f, 8, fondo);
-    if (!seleccionado) DrawRectangleRoundedLines(rect, 0.3f, 8, COLOR_BORDE);
+    if (!seleccionado) DrawRectangleRoundedLines(rect, 0.3f, 8, 2.0f, COLOR_BORDE);
 
     /* Cuadrito con la letra */
     Rectangle cajaLetra = { rect.x + 10, rect.y + rect.height/2 - 14, 28, 28 };
@@ -216,7 +216,7 @@ int boton(Rectangle rect, const char *label, int seleccionado) {
     Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
 
     DrawRectangleRounded(rect, 0.35f, 8, fondo);
-    if (!seleccionado) DrawRectangleRoundedLines(rect, 0.35f, 8, COLOR_BORDE);
+    if (!seleccionado) DrawRectangleRoundedLines(rect, 0.35f, 8, 2.0f, COLOR_BORDE);
     texto(label, (int)rect.x + 14, (int)(rect.y + rect.height/2 - 9), 16, colorTxt);
 
     Vector2 m = GetMousePosition();
