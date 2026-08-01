@@ -1,5 +1,5 @@
 /* ============================================================
-   CALCULADORA DE HUELLA DE CARBONO PERSONAL - Version 2 (Mobile-ready)
+   CALCULADORA DE HUELLA DE CARBONO PERSONAL - Version iOS/Mobile Fix
    ============================================================ */
 
 #include "raylib.h"
@@ -89,7 +89,6 @@ ResultadoHuella calcular_huella(RespuestasUsuario r) {
 #define COLOR_FONDO        (Color){ 251, 250, 246, 255 }
 #define COLOR_TARJETA      (Color){ 241, 239, 228, 255 }
 #define COLOR_BORDE        (Color){ 217, 210, 154, 255 }
-#define COLOR_BORDE_FUERTE (Color){ 180, 172, 120, 255 }
 #define COLOR_ACENTO       (Color){ 133, 200, 162, 255 }
 #define COLOR_ACENTO_TXT   (Color){ 15, 58, 40, 255 }
 #define COLOR_MINT         (Color){ 187, 220, 181, 255 }
@@ -135,6 +134,20 @@ void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
     DrawTextEx(fuente, msg, (Vector2){ centroX - medida.x / 2.0f, (float)y }, (float)tam, 1.0f, color);
 }
 
+/* DETECCION INTELIGENTE DE ENTRADA EN MOVIL E IPHONE */
+int FuePresionadoEnRec(Rectangle rect) {
+    Vector2 pos = GetMousePosition();
+    int interactuando = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP);
+
+    if (GetTouchPointCount() > 0) {
+        pos = GetTouchPosition(0);
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP)) {
+            interactuando = 1;
+        }
+    }
+    return CheckCollisionPointRec(pos, rect) && interactuando;
+}
+
 int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionado) {
     Color fondo = seleccionado ? COLOR_ACENTO : (Color){255,255,255,255};
     Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
@@ -153,10 +166,7 @@ int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionad
 
     texto(label, (int)rect.x + 50, (int)(rect.y + rect.height/2 - 9), 15, colorTxt);
 
-    Vector2 m = GetMousePosition();
-    int presionado = CheckCollisionPointRec(m, rect) && 
-                     (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP));
-    return presionado;
+    return FuePresionadoEnRec(rect);
 }
 
 int boton(Rectangle rect, const char *label, int seleccionado) {
@@ -167,16 +177,11 @@ int boton(Rectangle rect, const char *label, int seleccionado) {
     if (!seleccionado) DrawRectangleRoundedLines(rect, 0.35f, 8, 2.0f, COLOR_BORDE);
     texto(label, (int)rect.x + 14, (int)(rect.y + rect.height/2 - 9), 16, colorTxt);
 
-    Vector2 m = GetMousePosition();
-    int presionado = CheckCollisionPointRec(m, rect) && 
-                     (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP));
-    return presionado;
+    return FuePresionadoEnRec(rect);
 }
 
 void casilla(Rectangle rect, const char *label, int *marcado) {
-    Vector2 m = GetMousePosition();
-    if (CheckCollisionPointRec(m, rect) && 
-       (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP))) {
+    if (FuePresionadoEnRec(rect)) {
         *marcado = !(*marcado);
     }
 
@@ -264,6 +269,7 @@ int main(void) {
 
     const int ANCHO = 420, ALTO = 800;
     InitWindow(ANCHO, ALTO, "Calculadora de Huella de Carbono");
+    SetGesturesEnabled(GESTURE_TAP);
     SetTargetFPS(60);
 
     int totalCodepoints = 0;
@@ -341,12 +347,11 @@ int main(void) {
             }
 
             Rectangle btnContinuar = { 40, 430, ANCHO - 80, 48 };
-            if (!bloqueadoPorFade && boton(btnContinuar, "Continuar", 1)) {
+            int clickContinuar = boton(btnContinuar, "Continuar", 1);
+            if (!bloqueadoPorFade && clickContinuar) {
                 fade = FUNDIENDO_SALIDA;
                 alphaFade = 0.0f;
                 pantallaDestino = PANTALLA_BIENVENIDA;
-            } else {
-                boton(btnContinuar, "Continuar", 1);
             }
         }
 
@@ -389,24 +394,17 @@ int main(void) {
             }
 
             Rectangle btnIniciar = { 40, 380, ANCHO - 80, 48 };
-            DrawRectangleRounded(btnIniciar, 0.3f, 8, COLOR_ACENTO);
-            textoCentrado("Iniciar test", ANCHO/2, (int)btnIniciar.y + 14, 16, COLOR_ACENTO_TXT);
+            int clickIniciar = boton(btnIniciar, "Iniciar test", 1);
 
-            if (!bloqueadoPorFade) {
-                Vector2 m = GetMousePosition();
-                if (CheckCollisionPointRec(m, btnIniciar) && 
-                   (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP))) {
-                    
-                    if (letrasNombre < 2) {
-                        strcpy(nombre, "Invitado");
-                        letrasNombre = 8;
-                    }
-
-                    fade = FUNDIENDO_SALIDA;
-                    alphaFade = 0.0f;
-                    pantallaDestino = PANTALLA_FORMULARIO;
-                    paso = PASO_TRANSPORTE;
+            if (!bloqueadoPorFade && clickIniciar) {
+                if (letrasNombre < 2) {
+                    strcpy(nombre, "Invitado");
+                    letrasNombre = 8;
                 }
+                fade = FUNDIENDO_SALIDA;
+                alphaFade = 0.0f;
+                pantallaDestino = PANTALLA_FORMULARIO;
+                paso = PASO_TRANSPORTE;
             }
         }
 
@@ -445,7 +443,6 @@ int main(void) {
             texto(etiquetaPaso, 108, 90, 12, COLOR_TEXTO_TENUE);
             texto(pregunta, 108, 112, 15, COLOR_TEXTO);
 
-            int hayRespuesta = 0;
             const int ESPACIADO = 68;
             const int ALTO_OPCION = 54;
 
@@ -455,7 +452,6 @@ int main(void) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.transporte == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.transporte = i+1;
-                    else if (sel) botonConLetra(r, 'A'+i, ops[i], sel);
                 }
             }
             else if (paso == PASO_TIEMPO) {
@@ -464,7 +460,6 @@ int main(void) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.tiempo_trayecto == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.tiempo_trayecto = i+1;
-                    else if (sel) botonConLetra(r, 'A'+i, ops[i], sel);
                 }
             }
             else if (paso == PASO_DUCHA) {
@@ -473,7 +468,6 @@ int main(void) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.ducha == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.ducha = i+1;
-                    else if (sel) botonConLetra(r, 'A'+i, ops[i], sel);
                 }
             }
             else if (paso == PASO_AGUA_EXTRA) {
@@ -482,10 +476,6 @@ int main(void) {
                 if (!bloqueadoPorFade) {
                     casilla(r1, "Riego jardin frecuente", &respuestas.riego);
                     casilla(r2, "Lavo mi auto con manguera", &respuestas.lavado_auto);
-                } else {
-                    int tmp1 = respuestas.riego, tmp2 = respuestas.lavado_auto;
-                    casilla(r1, "Riego jardin frecuente", &tmp1);
-                    casilla(r2, "Lavo mi auto con manguera", &tmp2);
                 }
             }
             else if (paso == PASO_ELECTRICIDAD) {
@@ -494,7 +484,6 @@ int main(void) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.electricidad == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.electricidad = i+1;
-                    else if (sel) botonConLetra(r, 'A'+i, ops[i], sel);
                 }
             }
             else if (paso == PASO_AC) {
@@ -503,7 +492,6 @@ int main(void) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.ac == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.ac = i+1;
-                    else if (sel) botonConLetra(r, 'A'+i, ops[i], sel);
                 }
             }
             else if (paso == PASO_GAS) {
@@ -512,11 +500,10 @@ int main(void) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.gas == i+1);
                     if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.gas = i+1;
-                    else if (sel) botonConLetra(r, 'A'+i, ops[i], sel);
                 }
             }
 
-            hayRespuesta = pasoValido(paso, respuestas);
+            int hayRespuesta = pasoValido(paso, respuestas);
 
             Rectangle btnAtras = { 30, ALTO - 90, 120, 46 };
             Rectangle btnSiguiente = { ANCHO - 150, ALTO - 90, 120, 46 };
