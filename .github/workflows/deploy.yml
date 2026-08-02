@@ -26,6 +26,9 @@ jobs:
         run: |
           wget https://github.com/raysan5/raylib/releases/download/6.0/raylib-6.0_webassembly.zip
           unzip raylib-6.0_webassembly.zip
+          # En Raylib 6.0 el archivo de la libreria se llama libraylib.web.a
+          # en vez de libraylib.a; -lraylib necesita ese nombre exacto.
+          cp raylib-6.0_webassembly/lib/libraylib.web.a raylib-6.0_webassembly/lib/libraylib.a
       - name: Compilar C a WebAssembly
         run: |
           emcc calculadora_final.c -o index.html \
