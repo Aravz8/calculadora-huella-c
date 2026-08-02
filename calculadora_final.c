@@ -142,13 +142,13 @@ Font fuenteMediana;
 
 void texto(const char *msg, int x, int y, int tam, Color color) {
     Font f = (tam > 22) ? fuenteGrande : fuenteMediana;
-    SetTextureFilter(f.texture, TEXTUREFILTER_BILINEAR);
+    SetTextureFilter(f.texture, TEXTURE_FILTER_BILINEAR);
     DrawTextEx(f, msg, (Vector2){ (float)x, (float)y }, (float)tam, 1.0f, color);
 }
 
 void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
     Font f = (tam > 22) ? fuenteGrande : fuenteMediana;
-    SetTextureFilter(f.texture, TEXTUREFILTER_BILINEAR);
+    SetTextureFilter(f.texture, TEXTURE_FILTER_BILINEAR);
     Vector2 medida = MeasureTextEx(f, msg, (float)tam, 1.0f);
     DrawTextEx(f, msg, (Vector2){ centroX - medida.x / 2.0f, (float)y }, (float)tam, 1.0f, color);
 }
