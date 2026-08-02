@@ -11,6 +11,7 @@
             padding: 0;
         }
         body {
+            /* Fondo kaki con el patron de hojas dispersas (cambio #1 de la lista) */
             background-color: #e8e2c4;
             background-image: url('fondo.jpg');
             background-size: cover;
@@ -30,21 +31,8 @@
         #contenedor-app {
             position: relative;
             max-width: 95vw;
-            max-height: 97vh;
+            max-height: 92vh;
             aspect-ratio: 420 / 800;
-        }
-
-        /* AJUSTE PARA MONITOR: solo se activa a partir de 700px de ancho
-           de pantalla (ningun celular, ni en horizontal, llega a eso en
-           uso normal). El movil sigue exactamente igual que antes, sin
-           ningun cambio -- esto NO es deteccion de dispositivo, es
-           simplemente permitir que la misma tarjeta crezca mas en
-           pantallas anchas, usando el mismo aspect-ratio 420:800 de
-           siempre. */
-        @media (min-width: 700px) {
-            #contenedor-app {
-                max-width: 560px;
-            }
         }
 
         canvas.emscripten {
@@ -54,6 +42,7 @@
             width: 100%;
             height: 100%;
             display: block;
+            /* Ayuda a que el navegador no suavice de mas al escalar */
             image-rendering: -webkit-optimize-contrast;
         }
 
@@ -74,7 +63,7 @@
             height: 5.5%;
             opacity: 0;
             border: none;
-            font-size: 16px;
+            font-size: 16px; /* 16px+ evita que Safari haga zoom automatico al enfocar */
             background: transparent;
         }
     </style>
@@ -96,13 +85,12 @@
             })()
         };
 
-        /* Puente de teclado para movil: cada vez que el usuario escribe en
-           el input invisible, se manda el texto a ActualizarNombreDesdeJS()
-           del lado de C. Este es el UNICO camino por el que el nombre se
-           actualiza en la version web (el teclado fisico de Raylib esta
-           deshabilitado en esa version, ver #ifndef __EMSCRIPTEN__ en el C),
-           para que no haya dos sistemas escribiendo la misma variable a
-           la vez. */
+        /* ------------------------------------------------------------
+           Puente de teclado para movil (cambio #3 de la lista).
+           Cada vez que el usuario escribe en el input invisible, se
+           manda el texto a la funcion ActualizarNombreDesdeJS() del
+           lado de C, exportada con EMSCRIPTEN_KEEPALIVE.
+           ------------------------------------------------------------ */
         var inputNombre = document.getElementById('input-nombre');
         inputNombre.addEventListener('input', function () {
             if (window.Module && Module.ccall) {
@@ -110,6 +98,13 @@
             }
         });
 
+        /* ------------------------------------------------------------
+           Ajuste de nitidez del canvas (cambio #2 de la lista).
+           El canvas se dibuja internamente a una resolucion mayor
+           (segun devicePixelRatio de la pantalla), mientras el CSS de
+           arriba controla el tamano VISUAL. Asi el texto no se ve
+           borroso en pantallas de alta densidad (retina, celulares).
+           ------------------------------------------------------------ */
         function ajustarNitidezCanvas() {
             var canvas = document.getElementById('canvas');
             var dpr = window.devicePixelRatio || 1;
