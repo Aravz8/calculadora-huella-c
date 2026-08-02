@@ -19,8 +19,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            /* Fallback para navegadores sin soporte de dvh */
             min-height: 100vh;
             height: 100vh;
+            /* dvh descuenta correctamente la barra de direcciones dinamica
+               de Android/iOS; sobreescribe el vh de arriba cuando esta soportado */
+            min-height: 100dvh;
+            height: 100dvh;
             overflow: hidden;
         }
         /* Contenedor adaptativo:
@@ -29,22 +34,22 @@
         #contenedor-app {
             position: relative;
             height: 92vh;
+            height: 92dvh;
             max-height: 750px;
             max-width: 95vw;
             aspect-ratio: 420 / 800;
         }
-
         /* Ajuste específico para Monitores / Pantallas de escritorio */
         @media (min-width: 768px) {
             #contenedor-app {
                 height: 85vh;
+                height: 85dvh;
                 max-height: 780px;
             }
             canvas.emscripten {
                 border: 1px solid rgba(217, 210, 154, 0.5);
             }
         }
-
         canvas.emscripten {
             border: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -54,7 +59,6 @@
             display: block;
             image-rendering: -webkit-optimize-contrast;
         }
-
         /* Input invisible para el teclado virtual */
         #input-nombre {
             position: absolute;
@@ -81,18 +85,16 @@
             print: (function() {})(),
             canvas: (function() {
                 var canvas = document.getElementById('canvas');
-                
+
                 // Previene scroll nativo y gestos del navegador al tocar el canvas en Android/iOS
                 ['touchstart', 'touchend', 'touchmove'].forEach(function(evt) {
                     canvas.addEventListener(evt, function(e) {
                         e.preventDefault();
                     }, { passive: false });
                 });
-
                 return canvas;
             })()
         };
-
         /* Puente de teclado móvil hacia C */
         var inputNombre = document.getElementById('input-nombre');
         inputNombre.addEventListener('input', function () {
