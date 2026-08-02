@@ -26,12 +26,21 @@ jobs:
       - name: Configurar Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: latest
+          version: 3.1.50
+
+      - name: Descargar Raylib para WebAssembly
+        run: |
+          wget https://github.com/raysan5/raylib/releases/download/5.0/raylib-5.0_webassembly.zip
+          unzip raylib-5.0_webassembly.zip -d raylib_web
 
       - name: Compilar C a WebAssembly
         run: |
           emcc calculadora_final.c -o index.html \
-            -s USE_RAYLIB=1 \
+            -I./raylib_web/include \
+            -L./raylib_web/lib \
+            -lraylib \
+            -s USE_GLFW=3 \
+            -s ASYNCIFY \
             -s EXPORTED_FUNCTIONS='["_main", "_ActualizarNombreDesdeJS", "_EnviarAGoogleSheets"]' \
             -s EXPORTED_RUNTIME_METHODS='["ccall", "UTF8ToString"]' \
             --shell-file shell_minimal.html \
