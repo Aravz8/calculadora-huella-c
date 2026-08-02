@@ -24,27 +24,28 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configurar Emscripten
-        uses: mymindstorm/setup-emsdk@v13
+        uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.50
+          version: latest
 
-      - name: Descargar Raylib Web Precompilado
+      - name: Compilar C a WebAssembly
         run: |
-          curl -L -o raylib_web.zip https://github.com/raysan5/raylib/releases/download/5.0/raylib-5.0_webassembly.zip
-          unzip raylib_web.zip -d raylib_web
+          emcc calculadora_final.c -o index.html \
+            -s USE_RAYLIB=1 \
+            -s EXPORTED_FUNCTIONS='["_main", "_ActualizarNombreDesdeJS", "_EnviarAGoogleSheets"]' \
+            -s EXPORTED_RUNTIME_METHODS='["ccall", "UTF8ToString"]' \
+            --shell-file shell_minimal.html \
+            --preload-file recursos \
+            --preload-file fondo.jpg
 
-      - name: Compilar C a WASM
-        run: |
-          emcc calculadora_final.c -o index.html -Os -Wall -I raylib_web/raylib-5.0_webassembly/include -L raylib_web/raylib-5.0_webassembly/lib -lraylib -s USE_GLFW=3 -s ASYNCIFY --preload-file recursos --shell-file shell_minimal.html
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
 
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Subir artefactos web
+      - name: Subir artefacto de Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
-      - name: Publicar en GitHub Pages
+      - name: Desplegar a GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
