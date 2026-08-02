@@ -1,18 +1,14 @@
 name: Compilar C (Raylib) a WebAssembly
-
 on:
   push:
     branches: [ "main" ]
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: true
-
 jobs:
   build-and-deploy:
     environment:
@@ -22,39 +18,32 @@ jobs:
     steps:
       - name: Descargar codigo
         uses: actions/checkout@v4
-
       - name: Configurar Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
           version: 3.1.50
-
       - name: Descargar Raylib para WebAssembly
         run: |
-          wget https://github.com/raysan5/raylib/releases/download/5.0/raylib-5.0_webassembly.zip
-          unzip raylib-5.0_webassembly.zip
-
+          wget https://github.com/raysan5/raylib/releases/download/6.0/raylib-6.0_webassembly.zip
+          unzip raylib-6.0_webassembly.zip
       - name: Compilar C a WebAssembly
         run: |
           emcc calculadora_final.c -o index.html \
-            -I./raylib-5.0_webassembly/include \
-            -L./raylib-5.0_webassembly/lib \
+            -I./raylib-6.0_webassembly/include \
+            -L./raylib-6.0_webassembly/lib \
             -lraylib \
             -s USE_GLFW=3 \
             -s ASYNCIFY \
-            -s EXPORTED_FUNCTIONS='["_main", "_ActualizarNombreDesdeJS", "_EnviarAGoogleSheets"]' \
+            -s EXPORTED_FUNCTIONS='["_main", "_ActualizarNombreDesdeJS"]' \
             -s EXPORTED_RUNTIME_METHODS='["ccall", "UTF8ToString"]' \
             --shell-file shell_minimal.html \
-            --preload-file recursos \
-            --preload-file fondo.jpg
-
+            --preload-file recursos
       - name: Configurar Pages
         uses: actions/configure-pages@v5
-
       - name: Subir artefacto de Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
       - name: Desplegar a GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
