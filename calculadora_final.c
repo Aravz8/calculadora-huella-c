@@ -133,8 +133,19 @@ EM_JS(void, OcultarTecladoJS, (), {
         document.activeElement.blur();
     }
 });
+
+/* Limpia el <input> invisible de HTML desde el lado de C. Es necesario
+   porque ese campo es un elemento real del navegador que NO se borra
+   solo porque en C pongamos nombre[0]='\0' -- si no se limpia tambien
+   aqui, la proxima vez que el usuario escriba, el navegador seguiria
+   partiendo del texto viejo que quedo ahi guardado. */
+EM_JS(void, LimpiarCampoNombreJS, (), {
+    var campo = document.getElementById('input-nombre');
+    if (campo) campo.value = '';
+});
 #else
 void OcultarTecladoJS() {}
+void LimpiarCampoNombreJS(void) {}
 #endif
 
 Font fuente;
@@ -398,9 +409,17 @@ int main(void) {
                 if (!bloqueadoPorFade && FuePresionadoEnRec(btnBorrar)) {
                     letrasNombre = 0;
                     nombre[0] = '\0';
+                    LimpiarCampoNombreJS();
                 }
             }
 
+            /* Entrada de teclado FISICO: solo en escritorio. En la version
+               web (Emscripten), el nombre se maneja EXCLUSIVAMENTE por el
+               puente con el <input> invisible de HTML (ActualizarNombreDesdeJS),
+               para evitar que los dos sistemas escriban a la vez sobre la
+               misma variable y se generen conflictos como el del backspace
+               que no borraba bien en movil. */
+#ifndef __EMSCRIPTEN__
             if (!bloqueadoPorFade) {
                 int tecla = GetCharPressed();
                 while (tecla > 0) {
@@ -411,12 +430,12 @@ int main(void) {
                     }
                     tecla = GetCharPressed();
                 }
-                /* Captura de borrar tanto por codigo de tecla como por la tecla física / virtual */
                 if ((IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) && letrasNombre > 0) {
                     letrasNombre--;
                     nombre[letrasNombre] = '\0';
                 }
             }
+#endif
 
             Rectangle btnIniciar = { 40, 380, ANCHO - 80, 48 };
             int clickIniciar = boton(btnIniciar, "Iniciar test", 1);
@@ -642,6 +661,7 @@ int main(void) {
             if (!bloqueadoPorFade && boton(btnReiniciar, "Volver a empezar", 1)) {
                 respuestas = (RespuestasUsuario){0,0,0,0,0,0,0,0};
                 letrasNombre = 0; nombre[0] = '\0';
+                LimpiarCampoNombreJS();
                 fade = FUNDIENDO_SALIDA;
                 alphaFade = 0.0f;
                 pantallaDestino = PANTALLA_INTRO;
