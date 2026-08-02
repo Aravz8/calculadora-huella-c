@@ -418,7 +418,7 @@ int main(void) {
                     strcpy(nombre, "Invitado");
                     letrasNombre = 8;
                 }
-                
+
                 OcultarTecladoJS();
 
                 fade = FUNDIENDO_SALIDA;
@@ -466,12 +466,18 @@ int main(void) {
             const int ESPACIADO = 68;
             const int ALTO_OPCION = 54;
 
+            /* NOTA IMPORTANTE: en todos los bloques de abajo el widget SIEMPRE
+               se dibuja (para que no desaparezca durante el fade); el filtro
+               "!bloqueadoPorFade" se aplica únicamente sobre el resultado del
+               clic, nunca envolviendo la llamada que dibuja. */
+
             if (paso == PASO_TRANSPORTE) {
                 const char *ops[4] = {"A pie / Bicicleta", "Autobus / Metro", "Auto propio", "Motocicleta"};
                 for (int i = 0; i < 4; i++) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.transporte == i+1);
-                    if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.transporte = i+1;
+                    int clic = botonConLetra(r, 'A'+i, ops[i], sel);
+                    if (!bloqueadoPorFade && clic) respuestas.transporte = i+1;
                 }
             }
             else if (paso == PASO_TIEMPO) {
@@ -479,7 +485,8 @@ int main(void) {
                 for (int i = 0; i < 4; i++) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.tiempo_trayecto == i+1);
-                    if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.tiempo_trayecto = i+1;
+                    int clic = botonConLetra(r, 'A'+i, ops[i], sel);
+                    if (!bloqueadoPorFade && clic) respuestas.tiempo_trayecto = i+1;
                 }
             }
             else if (paso == PASO_DUCHA) {
@@ -487,15 +494,25 @@ int main(void) {
                 for (int i = 0; i < 3; i++) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.ducha == i+1);
-                    if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.ducha = i+1;
+                    int clic = botonConLetra(r, 'A'+i, ops[i], sel);
+                    if (!bloqueadoPorFade && clic) respuestas.ducha = i+1;
                 }
             }
             else if (paso == PASO_AGUA_EXTRA) {
                 Rectangle r1 = { 30, 186, ANCHO - 60, ALTO_OPCION };
                 Rectangle r2 = { 30, 186 + ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                /* casilla() ya dibuja y gestiona su propio clic internamente;
+                   para que no desaparezca durante el fade, siempre se dibuja,
+                   y solo evitamos que cambie de estado bloqueando el toggle
+                   con una copia de solo-lectura si hay fade activo. */
                 if (!bloqueadoPorFade) {
                     casilla(r1, "Riego jardin frecuente", &respuestas.riego);
                     casilla(r2, "Lavo mi auto con manguera", &respuestas.lavado_auto);
+                } else {
+                    int riegoSoloLectura = respuestas.riego;
+                    int lavadoSoloLectura = respuestas.lavado_auto;
+                    casilla(r1, "Riego jardin frecuente", &riegoSoloLectura);
+                    casilla(r2, "Lavo mi auto con manguera", &lavadoSoloLectura);
                 }
             }
             else if (paso == PASO_ELECTRICIDAD) {
@@ -503,7 +520,8 @@ int main(void) {
                 for (int i = 0; i < 3; i++) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.electricidad == i+1);
-                    if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.electricidad = i+1;
+                    int clic = botonConLetra(r, 'A'+i, ops[i], sel);
+                    if (!bloqueadoPorFade && clic) respuestas.electricidad = i+1;
                 }
             }
             else if (paso == PASO_AC) {
@@ -511,7 +529,8 @@ int main(void) {
                 for (int i = 0; i < 3; i++) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.ac == i+1);
-                    if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.ac = i+1;
+                    int clic = botonConLetra(r, 'A'+i, ops[i], sel);
+                    if (!bloqueadoPorFade && clic) respuestas.ac = i+1;
                 }
             }
             else if (paso == PASO_GAS) {
@@ -519,7 +538,8 @@ int main(void) {
                 for (int i = 0; i < 3; i++) {
                     Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.gas == i+1);
-                    if (!bloqueadoPorFade && botonConLetra(r, 'A'+i, ops[i], sel)) respuestas.gas = i+1;
+                    int clic = botonConLetra(r, 'A'+i, ops[i], sel);
+                    if (!bloqueadoPorFade && clic) respuestas.gas = i+1;
                 }
             }
 
@@ -529,14 +549,16 @@ int main(void) {
             Rectangle btnSiguiente = { ANCHO - 150, ALTO - 90, 120, 46 };
 
             if (paso != PASO_TRANSPORTE) {
-                if (!bloqueadoPorFade && boton(btnAtras, "Atras", 0)) {
+                int clicAtras = boton(btnAtras, "Atras", 0);
+                if (!bloqueadoPorFade && clicAtras) {
                     paso = pasoAnterior(paso, respuestas);
                 }
             }
 
             if (hayRespuesta) {
                 const char *labelBtn = (paso == PASO_GAS) ? "Resultado" : "Siguiente";
-                if (!bloqueadoPorFade && boton(btnSiguiente, labelBtn, 1)) {
+                int clicSiguiente = boton(btnSiguiente, labelBtn, 1);
+                if (!bloqueadoPorFade && clicSiguiente) {
                     if (paso == PASO_GAS) {
                         resultado = calcular_huella(respuestas);
                         EnviarAGoogleSheets(
@@ -631,7 +653,8 @@ int main(void) {
             }
 
             Rectangle btnReiniciar = { 30, ALTO - 90, ANCHO - 60, 48 };
-            if (!bloqueadoPorFade && boton(btnReiniciar, "Volver a empezar", 1)) {
+            int clicReiniciar = boton(btnReiniciar, "Volver a empezar", 1);
+            if (!bloqueadoPorFade && clicReiniciar) {
                 respuestas = (RespuestasUsuario){0,0,0,0,0,0,0,0};
                 letrasNombre = 0; nombre[0] = '\0';
                 fade = FUNDIENDO_SALIDA;
