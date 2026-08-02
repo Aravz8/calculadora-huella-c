@@ -1,5 +1,5 @@
 /* ============================================================
-   CALCULADORA DE HUELLA DE CARBONO PERSONAL - Version Fix Borrar Nombre
+   CALCULADORA DE HUELLA DE CARBONO PERSONAL - Version Monitor & Fix Android
    ============================================================ */
 
 #include "raylib.h"
@@ -148,17 +148,10 @@ void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
     DrawTextEx(fuente, msg, (Vector2){ centroX - medida.x / 2.0f, (float)y }, (float)tam, 1.0f, color);
 }
 
-/* DETECCION INTELIGENTE DE ENTRADA EN MOVIL E IPHONE */
+/* DETECCION UNIFICADA DE ENTRADA (CLIC / TOQUE MOVIL) */
 int FuePresionadoEnRec(Rectangle rect) {
     Vector2 pos = GetMousePosition();
     int interactuando = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP);
-
-    if (GetTouchPointCount() > 0) {
-        pos = GetTouchPosition(0);
-        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP)) {
-            interactuando = 1;
-        }
-    }
     return CheckCollisionPointRec(pos, rect) && interactuando;
 }
 
@@ -390,7 +383,7 @@ int main(void) {
             } else {
                 texto(nombre, (int)campoNombre.x + 14, (int)campoNombre.y + 13, 16, COLOR_TEXTO);
 
-                /* Boton visual 'X' para limpiar el texto en moviles */
+                /* Botón visual 'X' para limpiar el texto */
                 Rectangle btnBorrar = { campoNombre.x + campoNombre.width - 36, campoNombre.y + 8, 28, 28 };
                 DrawRectangleRounded(btnBorrar, 0.5f, 6, COLOR_TARJETA);
                 textoCentrado("x", (int)(btnBorrar.x + 14), (int)(btnBorrar.y + 4), 16, COLOR_TEXTO_TENUE);
@@ -411,7 +404,6 @@ int main(void) {
                     }
                     tecla = GetCharPressed();
                 }
-                /* Captura de borrar tanto por codigo de tecla como por la tecla física / virtual */
                 if ((IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) && letrasNombre > 0) {
                     letrasNombre--;
                     nombre[letrasNombre] = '\0';
@@ -648,7 +640,7 @@ int main(void) {
             }
         }
 
-        /* Capa de Transicion (Fade) */
+        /* Capa de Transición (Fade) */
         if (fade != SIN_TRANSICION) {
             Color overlay = COLOR_FONDO;
             overlay.a = (unsigned char)(alphaFade * 255.0f);
