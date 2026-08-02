@@ -11,7 +11,6 @@
             padding: 0;
         }
         body {
-            /* Fondo kaki con el patron de hojas dispersas (cambio #1 de la lista) */
             background-color: #e8e2c4;
             background-image: url('fondo.jpg');
             background-size: cover;
@@ -24,46 +23,37 @@
             overflow: hidden;
         }
 
-        /* Contenedor que mantiene la proporcion 420:800 del programa en C.
-           El input invisible del nombre se posiciona en PORCENTAJE dentro
-           de este contenedor, para que quede alineado sin importar el
-           tamano real en pantalla. */
+        /* Contenedor corregido para coincidir con InitWindow(800, 720) de Raylib */
         #contenedor-app {
             position: relative;
-            max-width: 95vw;
+            width: 100%;
+            max-width: 800px;
             max-height: 92vh;
-            aspect-ratio: 420 / 800;
+            aspect-ratio: 800 / 720;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         canvas.emscripten {
             border: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             border-radius: 16px;
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
             display: block;
-            /* Ayuda a que el navegador no suavice de mas al escalar */
-            image-rendering: -webkit-optimize-contrast;
         }
 
-        /* Input invisible superpuesto EXACTO sobre el campo de nombre que
-           dibuja Raylib (rect interno: x=40,y=310,ancho=340,alto=44 de un
-           lienzo de 420x800). Se calcula en porcentaje:
-             left  = 40/420  = 9.52%
-             top   = 310/800 = 38.75%
-             width = 340/420 = 80.95%
-             height= 44/800  = 5.5%
-           Al tocarlo en el celular, el sistema operativo abre el teclado
-           tactil (algo que un <canvas> no puede hacer por si solo). */
+        /* Input invisible re-alineado para resolución de 800x720 */
         #input-nombre {
             position: absolute;
-            left: 9.52%;
-            top: 38.75%;
-            width: 80.95%;
-            height: 5.5%;
+            left: 30%;
+            top: 41.6%;
+            width: 40%;
+            height: 6.9%;
             opacity: 0;
             border: none;
-            font-size: 16px; /* 16px+ evita que Safari haga zoom automatico al enfocar */
+            font-size: 16px;
             background: transparent;
         }
     </style>
@@ -85,40 +75,13 @@
             })()
         };
 
-        /* ------------------------------------------------------------
-           Puente de teclado para movil (cambio #3 de la lista).
-           Cada vez que el usuario escribe en el input invisible, se
-           manda el texto a la funcion ActualizarNombreDesdeJS() del
-           lado de C, exportada con EMSCRIPTEN_KEEPALIVE.
-           ------------------------------------------------------------ */
+        /* Puente de teclado para movil */
         var inputNombre = document.getElementById('input-nombre');
         inputNombre.addEventListener('input', function () {
             if (window.Module && Module.ccall) {
                 Module.ccall('ActualizarNombreDesdeJS', null, ['string'], [inputNombre.value]);
             }
         });
-
-        /* ------------------------------------------------------------
-           Ajuste de nitidez del canvas (cambio #2 de la lista).
-           El canvas se dibuja internamente a una resolucion mayor
-           (segun devicePixelRatio de la pantalla), mientras el CSS de
-           arriba controla el tamano VISUAL. Asi el texto no se ve
-           borroso en pantallas de alta densidad (retina, celulares).
-           ------------------------------------------------------------ */
-        function ajustarNitidezCanvas() {
-            var canvas = document.getElementById('canvas');
-            var dpr = window.devicePixelRatio || 1;
-            var rect = canvas.getBoundingClientRect();
-            var anchoFisico = Math.round(rect.width * dpr);
-            var altoFisico = Math.round(rect.height * dpr);
-            if (canvas.width !== anchoFisico || canvas.height !== altoFisico) {
-                canvas.width = anchoFisico;
-                canvas.height = altoFisico;
-            }
-        }
-        window.addEventListener('resize', ajustarNitidezCanvas);
-        window.addEventListener('load', ajustarNitidezCanvas);
-        Module.preRun.push(ajustarNitidezCanvas);
     </script>
     {{{ SCRIPT }}}
 </body>
