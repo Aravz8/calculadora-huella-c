@@ -81,58 +81,59 @@
             align-items: stretch;
         }
 
-        /* Panel decorativo de escritorio: oculto por defecto (movil y demas
-           pantallas). Solo se muestra cuando tiene la clase 'activo', que
-           Raylib activa via MostrarPanelEscritorioJS() al entrar/salir de
-           la pantalla de Bienvenida. En movil nunca se muestra. */
+        /* Panel decorativo de escritorio: oculto en movil (por defecto,
+           arriba). En pantallas >=768px se muestra siempre, en las 4
+           pantallas de la app (Intro, Bienvenida, Formulario, Resultado),
+           ya que el canvas de Raylib no sabe nada de esto -- es puramente
+           un elemento HTML/CSS al lado del canvas. */
         #panel-desktop {
             display: none;
         }
         @media (min-width: 768px) {
-            #panel-desktop.activo {
+            #panel-desktop {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: flex-start;
                 gap: 14px;
-                width: 260px;
+                width: 340px;
                 background: #BBDCB5;
                 padding: 40px 32px;
                 border-radius: 16px 0 0 16px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             }
-            #panel-desktop.activo img {
+            #panel-desktop img {
                 width: 56px;
                 height: 56px;
             }
-            #panel-desktop.activo h2 {
+            #panel-desktop h2 {
                 font-size: 17px;
                 font-weight: 600;
                 color: #3A3A34;
                 margin: 0;
                 line-height: 1.3;
             }
-            #panel-desktop.activo p {
+            #panel-desktop p {
                 font-size: 12.5px;
                 color: #3A3A34;
                 opacity: 0.85;
                 margin: 0;
                 line-height: 1.5;
             }
-            #panel-desktop.activo .puntos {
+            #panel-desktop .puntos {
                 display: flex;
                 gap: 6px;
                 margin-top: 4px;
             }
-            #panel-desktop.activo .puntos span {
+            #panel-desktop .puntos span {
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
             }
-            /* Cuando el panel esta activo, el canvas pierde el redondeado
-               izquierdo para que las dos columnas se vean como una sola
-               tarjeta continua */
-            #app-wrapper:has(#panel-desktop.activo) canvas.emscripten {
+            /* El panel siempre esta presente en desktop, asi que el canvas
+               pierde el redondeado izquierdo para verse como una sola
+               tarjeta continua junto al panel */
+            canvas.emscripten {
                 border-radius: 0 16px 16px 0;
             }
         }
