@@ -10,6 +10,18 @@
 #include <emscripten.h>
 #endif
 
+/* En la build web, Raylib dibuja internamente al doble de resolucion y el
+   navegador reduce esa imagen al tamano final -- reducir se ve nitido,
+   mientras que antes el navegador tenia que AGRANDAR el lienzo de 420x800,
+   lo cual se ve borroso (le pasaba sobre todo al texto en desktop, con la
+   tarjeta mas grande). En el .exe nativo de escritorio no aplica: la
+   ventana ya es del tamano real, no hay reescalado de por medio. */
+#ifdef __EMSCRIPTEN__
+    #define ESCALA 2.0f
+#else
+    #define ESCALA 1.0f
+#endif
+
 typedef struct {
     int transporte;
     int tiempo_trayecto;
@@ -151,7 +163,8 @@ void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
 
 /* DETECCION UNIFICADA DE ENTRADA (CLIC / TOQUE MOVIL) */
 int FuePresionadoEnRec(Rectangle rect) {
-    Vector2 pos = GetMousePosition();
+    Vector2 posReal = GetMousePosition();
+    Vector2 pos = { posReal.x / ESCALA, posReal.y / ESCALA };
     int interactuando = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsGestureDetected(GESTURE_TAP);
     return CheckCollisionPointRec(pos, rect) && interactuando;
 }
@@ -276,9 +289,15 @@ int main(void) {
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
 
     const int ANCHO = 420, ALTO = 800;
-    InitWindow(ANCHO, ALTO, "Calculadora de Huella de Carbono");
+    InitWindow((int)(ANCHO * ESCALA), (int)(ALTO * ESCALA), "Calculadora de Huella de Carbono");
     SetGesturesEnabled(GESTURE_TAP);
     SetTargetFPS(60);
+
+    /* Camara de supersampling: todo el codigo de dibujo sigue usando las
+       mismas coordenadas logicas 420x800 de siempre; esta camara las
+       multiplica por ESCALA al momento de rasterizar. */
+    Camera2D camara = { 0 };
+    camara.zoom = ESCALA;
 
     int totalCodepoints = 0;
     int *codepoints = LoadCodepoints(
@@ -328,6 +347,7 @@ int main(void) {
 
         BeginDrawing();
         ClearBackground(COLOR_FONDO);
+        BeginMode2D(camara);
 
         /* ===================== INTRODUCCION ===================== */
         if (pantallaActual == PANTALLA_INTRO) {
@@ -677,6 +697,7 @@ int main(void) {
             DrawRectangle(0, 0, ANCHO, ALTO, overlay);
         }
 
+        EndMode2D();
         EndDrawing();
     }
 
