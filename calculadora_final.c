@@ -134,16 +134,8 @@ EM_JS(void, OcultarTecladoJS, (), {
         document.activeElement.blur();
     }
 });
-
-EM_JS(void, MostrarPanelEscritorioJS, (int mostrar), {
-    var panel = document.getElementById('panel-desktop');
-    if (!panel) return;
-    if (mostrar) panel.classList.add('activo');
-    else panel.classList.remove('activo');
-});
 #else
 void OcultarTecladoJS() {}
-void MostrarPanelEscritorioJS(int mostrar) { (void)mostrar; }
 #endif
 
 Font fuente;
@@ -323,7 +315,6 @@ int main(void) {
             if (alphaFade >= 1.0f) {
                 alphaFade = 1.0f;
                 pantallaActual = pantallaDestino;
-                MostrarPanelEscritorioJS(pantallaActual == PANTALLA_BIENVENIDA ? 1 : 0);
                 fade = FUNDIENDO_ENTRADA;
             }
         } else if (fade == FUNDIENDO_ENTRADA) {
