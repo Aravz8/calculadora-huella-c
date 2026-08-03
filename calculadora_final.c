@@ -107,7 +107,7 @@ ResultadoHuella calcular_huella(RespuestasUsuario r) {
 #define COLOR_ROSA         (Color){ 233, 193, 217, 255 }
 #define COLOR_ALERTA       (Color){ 242, 178, 152, 255 } /* coral pastel: mismo tono suave, pero se lee como alerta */
 #define COLOR_TEXTO        (Color){ 58, 58, 52, 255 }
-#define COLOR_TEXTO_TENUE  (Color){ 95, 92, 78, 255 }
+#define COLOR_TEXTO_TENUE  (Color){ 74, 71, 60, 255 } /* mas oscuro que antes: pasa de contraste AA (6.4:1) a AAA (~8:1) */
 
 typedef enum { PANTALLA_INTRO, PANTALLA_BIENVENIDA, PANTALLA_FORMULARIO, PANTALLA_RESULTADO } Pantalla;
 
@@ -159,6 +159,21 @@ void texto(const char *msg, int x, int y, int tam, Color color) {
 void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
     Vector2 medida = MeasureTextEx(fuente, msg, (float)tam, 1.0f);
     DrawTextEx(fuente, msg, (Vector2){ centroX - medida.x / 2.0f, (float)y }, (float)tam, 1.0f, color);
+}
+
+/* "Bold falso": se dibuja el mismo texto dos veces con 1px de diferencia.
+   Solo cargamos Nunito-Regular, asi que esto le da jerarquia real a los
+   titulos sin necesitar un archivo de fuente Bold aparte. */
+void textoNegrita(const char *msg, int x, int y, int tam, Color color) {
+    DrawTextEx(fuente, msg, (Vector2){ (float)x + 1, (float)y }, (float)tam, 1.0f, color);
+    DrawTextEx(fuente, msg, (Vector2){ (float)x, (float)y }, (float)tam, 1.0f, color);
+}
+
+void textoCentradoNegrita(const char *msg, int centroX, int y, int tam, Color color) {
+    Vector2 medida = MeasureTextEx(fuente, msg, (float)tam, 1.0f);
+    float x = centroX - medida.x / 2.0f;
+    DrawTextEx(fuente, msg, (Vector2){ x + 1, (float)y }, (float)tam, 1.0f, color);
+    DrawTextEx(fuente, msg, (Vector2){ x, (float)y }, (float)tam, 1.0f, color);
 }
 
 /* DETECCION UNIFICADA DE ENTRADA (CLIC / TOQUE MOVIL) */
@@ -352,8 +367,8 @@ int main(void) {
         /* ===================== INTRODUCCION ===================== */
         if (pantallaActual == PANTALLA_INTRO) {
 
-            textoCentrado("Bienvenido a la Calculadora", ANCHO/2, 90, 19, COLOR_TEXTO);
-            textoCentrado("de Huella de Carbono", ANCHO/2, 116, 19, COLOR_TEXTO);
+            textoCentradoNegrita("Bienvenido a la Calculadora", ANCHO/2, 90, 19, COLOR_TEXTO);
+            textoCentradoNegrita("de Huella de Carbono", ANCHO/2, 116, 19, COLOR_TEXTO);
 
             const char *parrafo[9] = {
                 "La huella de carbono es la cantidad de",
@@ -389,8 +404,8 @@ int main(void) {
             float escalaIcono = 0.234f;
             DrawTextureEx(iconoBienvenida, (Vector2){ ANCHO/2 - 60, 40 }, 0, escalaIcono, WHITE);
 
-            textoCentrado("Calculadora de Huella", ANCHO/2, 176, 19, COLOR_TEXTO);
-            textoCentrado("de Carbono Personal", ANCHO/2, 202, 19, COLOR_TEXTO);
+            textoCentradoNegrita("Calculadora de Huella", ANCHO/2, 176, 19, COLOR_TEXTO);
+            textoCentradoNegrita("de Carbono Personal", ANCHO/2, 202, 19, COLOR_TEXTO);
             textoCentrado("Responde 7 preguntas rapidas", ANCHO/2, 238, 13, COLOR_TEXTO_TENUE);
             textoCentrado("sobre tus actividades de hoy", ANCHO/2, 256, 13, COLOR_TEXTO_TENUE);
 
@@ -488,7 +503,7 @@ int main(void) {
             char etiquetaPaso[32];
             sprintf(etiquetaPaso, "Pregunta %d de %d", idxVisible + 1, totalVisible);
             texto(etiquetaPaso, 108, 90, 12, COLOR_TEXTO_TENUE);
-            texto(pregunta, 108, 112, 15, COLOR_TEXTO);
+            textoNegrita(pregunta, 108, 112, 15, COLOR_TEXTO);
 
             const int ESPACIADO = 68;
             const int ALTO_OPCION = 54;
@@ -616,7 +631,7 @@ int main(void) {
 
             char textoTotal[32];
             sprintf(textoTotal, "%.1f kg CO2e/dia", resultado.co2_total);
-            texto(textoTotal, 30, 84, 30, COLOR_TEXTO);
+            textoNegrita(textoTotal, 30, 84, 30, COLOR_TEXTO);
 
             const char *nivel; Color colorNivel;
             if (resultado.co2_total < 4.0f)      { nivel = "IMPACTO BAJO";      colorNivel = COLOR_MINT; }
@@ -626,7 +641,7 @@ int main(void) {
             Vector2 medidaNivel = MeasureTextEx(fuente, nivel, 14, 1.0f);
             Rectangle badge = { 30, 130, medidaNivel.x + 28, 32 };
             DrawRectangleRounded(badge, 0.5f, 8, colorNivel);
-            texto(nivel, 44, 138, 14, COLOR_TEXTO);
+            textoNegrita(nivel, 44, 138, 14, COLOR_TEXTO);
 
             DrawRectangleRounded((Rectangle){ 30, 180, ANCHO - 60, 150 }, 0.1f, 8, COLOR_TARJETA);
             char linea[48];
