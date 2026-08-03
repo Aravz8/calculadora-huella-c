@@ -93,6 +93,7 @@ ResultadoHuella calcular_huella(RespuestasUsuario r) {
 #define COLOR_ACENTO_TXT   (Color){ 15, 58, 40, 255 }
 #define COLOR_MINT         (Color){ 187, 220, 181, 255 }
 #define COLOR_ROSA         (Color){ 233, 193, 217, 255 }
+#define COLOR_ALERTA       (Color){ 242, 178, 152, 255 } /* coral pastel: mismo tono suave, pero se lee como alerta */
 #define COLOR_TEXTO        (Color){ 58, 58, 52, 255 }
 #define COLOR_TEXTO_TENUE  (Color){ 95, 92, 78, 255 }
 
@@ -133,8 +134,16 @@ EM_JS(void, OcultarTecladoJS, (), {
         document.activeElement.blur();
     }
 });
+
+EM_JS(void, MostrarPanelEscritorioJS, (int mostrar), {
+    var panel = document.getElementById('panel-desktop');
+    if (!panel) return;
+    if (mostrar) panel.classList.add('activo');
+    else panel.classList.remove('activo');
+});
 #else
 void OcultarTecladoJS() {}
+void MostrarPanelEscritorioJS(int mostrar) { (void)mostrar; }
 #endif
 
 Font fuente;
@@ -314,6 +323,7 @@ int main(void) {
             if (alphaFade >= 1.0f) {
                 alphaFade = 1.0f;
                 pantallaActual = pantallaDestino;
+                MostrarPanelEscritorioJS(pantallaActual == PANTALLA_BIENVENIDA ? 1 : 0);
                 fade = FUNDIENDO_ENTRADA;
             }
         } else if (fade == FUNDIENDO_ENTRADA) {
@@ -394,6 +404,11 @@ int main(void) {
                 }
             }
 
+#ifndef __EMSCRIPTEN__
+            /* Solo el .exe de escritorio usa el teclado nativo de Raylib.
+               En la build web (PC o movil) la escritura viaja unicamente
+               por el input HTML invisible (ActualizarNombreDesdeJS), para
+               evitar que dos sistemas escriban 'nombre' al mismo tiempo. */
             if (!bloqueadoPorFade) {
                 int tecla = GetCharPressed();
                 while (tecla > 0) {
@@ -409,6 +424,7 @@ int main(void) {
                     nombre[letrasNombre] = '\0';
                 }
             }
+#endif
 
             Rectangle btnIniciar = { 40, 380, ANCHO - 80, 48 };
             int clickIniciar = boton(btnIniciar, "Iniciar test", 1);
@@ -594,7 +610,7 @@ int main(void) {
             const char *nivel; Color colorNivel;
             if (resultado.co2_total < 4.0f)      { nivel = "IMPACTO BAJO";      colorNivel = COLOR_MINT; }
             else if (resultado.co2_total <= 9.0f){ nivel = "IMPACTO MODERADO";  colorNivel = COLOR_BORDE; }
-            else                                  { nivel = "IMPACTO ALTO";      colorNivel = COLOR_ROSA; }
+            else                                  { nivel = "IMPACTO ALTO";      colorNivel = COLOR_ALERTA; }
 
             Vector2 medidaNivel = MeasureTextEx(fuente, nivel, 14, 1.0f);
             Rectangle badge = { 30, 130, medidaNivel.x + 28, 32 };
