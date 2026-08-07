@@ -164,7 +164,7 @@ void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
 }
 
 /* "Bold falso": se dibuja el mismo texto dos veces con 1px de diferencia.
-   Solo cargamos Poppins-Regular, asi que esto le da jerarquia real a los
+   Solo cargamos NunitoSans-Regular, asi que esto le da jerarquia real a los
    titulos sin necesitar un archivo de fuente Bold aparte. */
 void textoNegrita(const char *msg, int x, int y, int tam, Color color) {
     DrawTextEx(fuente, msg, (Vector2){ (float)x + 1, (float)y }, (float)tam, 1.0f, color);
@@ -176,6 +176,44 @@ void textoCentradoNegrita(const char *msg, int centroX, int y, int tam, Color co
     float x = centroX - medida.x / 2.0f;
     DrawTextEx(fuente, msg, (Vector2){ x + 1, (float)y }, (float)tam, 1.0f, color);
     DrawTextEx(fuente, msg, (Vector2){ x, (float)y }, (float)tam, 1.0f, color);
+}
+
+/* Envuelve un parrafo palabra por palabra midiendo el ancho REAL con la
+   fuente cargada (MeasureTextEx), en vez de saltos de linea escritos a
+   mano. Esto evita que un cambio de tipografia (ej. Nunito -> Poppins)
+   rompa el layout, ya que cada fuente tiene un ancho de caracter distinto.
+   Devuelve el Y donde quedo el cursor, para poder encadenar parrafos. */
+int envolverParrafo(const char *texto, int centroX, int yInicio, int tam,
+                     int anchoMax, int interlineado, Color color, int negrita) {
+    char copia[600];
+    snprintf(copia, sizeof(copia), "%s", texto);
+
+    char linea[200] = "";
+    int y = yInicio;
+
+    char *token = strtok(copia, " ");
+    while (token != NULL) {
+        char pruebaLinea[200];
+        if (linea[0] == '\0') snprintf(pruebaLinea, sizeof(pruebaLinea), "%s", token);
+        else snprintf(pruebaLinea, sizeof(pruebaLinea), "%s %s", linea, token);
+
+        Vector2 medida = MeasureTextEx(fuente, pruebaLinea, (float)tam, 1.0f);
+        if (medida.x > anchoMax && linea[0] != '\0') {
+            if (negrita) textoCentradoNegrita(linea, centroX, y, tam, color);
+            else textoCentrado(linea, centroX, y, tam, color);
+            y += interlineado;
+            snprintf(linea, sizeof(linea), "%s", token);
+        } else {
+            snprintf(linea, sizeof(linea), "%s", pruebaLinea);
+        }
+        token = strtok(NULL, " ");
+    }
+    if (linea[0] != '\0') {
+        if (negrita) textoCentradoNegrita(linea, centroX, y, tam, color);
+        else textoCentrado(linea, centroX, y, tam, color);
+        y += interlineado;
+    }
+    return y;
 }
 
 /* DETECCION UNIFICADA DE ENTRADA (CLIC / TOQUE MOVIL) */
@@ -323,7 +361,7 @@ int main(void) {
     int *codepoints = LoadCodepoints(
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         "áéíóúñÁÉÍÓÚÑ¿¡üÜ", &totalCodepoints);
-    fuente = LoadFontEx("recursos/Poppins-Regular.ttf", 64, codepoints, totalCodepoints);
+    fuente = LoadFontEx("recursos/NunitoSans-Regular.ttf", 64, codepoints, totalCodepoints);
     UnloadCodepoints(codepoints);
 
     Texture2D iconoBienvenida  = LoadTexture("recursos/cobi_bienvenida.png");
@@ -373,27 +411,20 @@ int main(void) {
         /* ===================== INTRODUCCION ===================== */
         if (pantallaActual == PANTALLA_INTRO) {
 
-            textoCentradoNegrita("Bienvenido a la Calculadora", ANCHO/2, 90, 19, COLOR_TEXTO);
-            textoCentradoNegrita("de Huella de Carbono", ANCHO/2, 116, 19, COLOR_TEXTO);
+            int yTitulo = envolverParrafo("Bienvenido a la Calculadora de Huella de Carbono",
+                ANCHO/2, 90, 19, ANCHO - 70, 26, COLOR_TEXTO, 1);
 
-            const char *parrafo[9] = {
-                "La huella de carbono es la cantidad de",
-                "gases de efecto invernadero que",
-                "generamos con nuestras actividades",
-                "diarias: como nos movemos, cuanta agua",
-                "y electricidad usamos, y como cocinamos.",
-                "",
-                "Responde 7 preguntas rapidas sobre tu",
-                "dia y descubre tu impacto ambiental,",
-                "con recomendaciones para reducirlo."
-            };
-            int y = 190;
-            for (int i = 0; i < 9; i++) {
-                if (parrafo[i][0] != '\0') {
-                    textoCentrado(parrafo[i], ANCHO/2, y, 13, COLOR_TEXTO_TENUE);
-                }
-                y += 20;
-            }
+            int y = yTitulo + 14;
+            y = envolverParrafo(
+                "La huella de carbono es la cantidad de gases de efecto invernadero "
+                "que generamos con nuestras actividades diarias: como nos movemos, "
+                "cuanta agua y electricidad usamos, y como cocinamos.",
+                ANCHO/2, y, 13, ANCHO - 70, 20, COLOR_TEXTO_TENUE, 0);
+            y += 12;
+            y = envolverParrafo(
+                "Responde 7 preguntas rapidas sobre tu dia y descubre tu impacto "
+                "ambiental, con recomendaciones para reducirlo.",
+                ANCHO/2, y, 13, ANCHO - 70, 20, COLOR_TEXTO_TENUE, 0);
 
             Rectangle btnContinuar = { 40, 430, ANCHO - 80, 48 };
             int clickContinuar = boton(btnContinuar, "Continuar", 1);
