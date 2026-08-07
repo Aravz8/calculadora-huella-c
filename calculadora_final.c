@@ -164,7 +164,7 @@ void textoCentrado(const char *msg, int centroX, int y, int tam, Color color) {
 }
 
 /* "Bold falso": se dibuja el mismo texto dos veces con 1px de diferencia.
-   Solo cargamos Nunito-Regular, asi que esto le da jerarquia real a los
+   Solo cargamos Poppins-Regular, asi que esto le da jerarquia real a los
    titulos sin necesitar un archivo de fuente Bold aparte. */
 void textoNegrita(const char *msg, int x, int y, int tam, Color color) {
     DrawTextEx(fuente, msg, (Vector2){ (float)x + 1, (float)y }, (float)tam, 1.0f, color);
@@ -205,7 +205,7 @@ int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionad
         (Vector2){ cajaLetra.x + 14 - medidaLetra.x/2, cajaLetra.y + 14 - medidaLetra.y/2 },
         15, 1.0f, COLOR_ACENTO_TXT);
 
-    texto(label, (int)rect.x + 50, (int)(rect.y + rect.height/2 - 9), 15, COLOR_TEXTO);
+    texto(label, (int)rect.x + 50, (int)(rect.y + rect.height/2 - 9), 16, COLOR_TEXTO);
 
     return FuePresionadoEnRec(rect);
 }
@@ -239,7 +239,7 @@ void casilla(Rectangle rect, const char *label, int *marcado) {
     }
 
     Color colorTxt = *marcado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
-    texto(label, (int)rect.x + 40, (int)(rect.y + rect.height/2 - 8), 14, colorTxt);
+    texto(label, (int)rect.x + 40, (int)(rect.y + rect.height/2 - 8), 15, colorTxt);
 }
 
 int siguientePaso(int paso, RespuestasUsuario r) {
@@ -323,7 +323,7 @@ int main(void) {
     int *codepoints = LoadCodepoints(
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         "áéíóúñÁÉÍÓÚÑ¿¡üÜ", &totalCodepoints);
-    fuente = LoadFontEx("recursos/Nunito-Regular.ttf", 64, codepoints, totalCodepoints);
+    fuente = LoadFontEx("recursos/Poppins-Regular.ttf", 64, codepoints, totalCodepoints);
     UnloadCodepoints(codepoints);
 
     Texture2D iconoBienvenida  = LoadTexture("recursos/cobi_bienvenida.png");
@@ -492,7 +492,7 @@ int main(void) {
 
             char etiquetaProgreso[16];
             sprintf(etiquetaProgreso, "%d%%", (int)(progreso * 100));
-            texto(etiquetaProgreso, ANCHO - 66, 48, 12, COLOR_TEXTO_TENUE);
+            texto(etiquetaProgreso, ANCHO - 66, 48, 13, COLOR_TEXTO_TENUE);
 
             Texture2D iconoActual = iconoTransporte;
             const char *pregunta = "";
@@ -565,8 +565,8 @@ int main(void) {
 
             char etiquetaPaso[32];
             sprintf(etiquetaPaso, "Pregunta %d de %d", idxVisible + 1, totalVisible);
-            texto(etiquetaPaso, 140, 94, 11, COLOR_TEXTO_TENUE);
-            textoNegrita(pregunta, 140, 118, 17, COLOR_TEXTO);
+            texto(etiquetaPaso, 140, 94, 13, COLOR_TEXTO_TENUE);
+            textoNegrita(pregunta, 140, 118, 18, COLOR_TEXTO);
 
             const int ESPACIADO = 68;
             const int ALTO_OPCION = 54;
@@ -660,12 +660,13 @@ int main(void) {
             }
             int yTip = Y_OPCIONES + (nOpcionesPaso - 1) * ESPACIADO + ALTO_OPCION + 20;
 
-            DrawRectangleRounded((Rectangle){ 30, (float)yTip, ANCHO - 60, 70 }, 0.2f, 8, COLOR_NAVY);
-            Rectangle circuloTip = { 46, (float)yTip + 21, 28, 28 };
+            const int ALTO_TIP = 92; /* antes: 70, crece hacia abajo para que el texto respire mas */
+            DrawRectangleRounded((Rectangle){ 30, (float)yTip, ANCHO - 60, ALTO_TIP }, 0.2f, 8, COLOR_NAVY);
+            Rectangle circuloTip = { 46, (float)yTip + 30, 28, 28 };
             DrawRectangleRounded(circuloTip, 0.5f, 8, COLOR_NARANJA);
             textoCentrado("!", (int)(circuloTip.x + 14), (int)(circuloTip.y + 6), 14, COLOR_ACENTO_TXT);
-            texto(tipLinea1, 86, yTip + 18, 11, (Color){249, 245, 235, 255});
-            texto(tipLinea2, 86, yTip + 36, 11, (Color){249, 245, 235, 255});
+            texto(tipLinea1, 86, yTip + 27, 13, (Color){249, 245, 235, 255});
+            texto(tipLinea2, 86, yTip + 52, 13, (Color){249, 245, 235, 255});
 
             int hayRespuesta = pasoValido(paso, respuestas);
 
