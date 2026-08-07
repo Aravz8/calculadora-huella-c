@@ -98,16 +98,18 @@ ResultadoHuella calcular_huella(RespuestasUsuario r) {
     return res;
 }
 
-#define COLOR_FONDO        (Color){ 251, 250, 246, 255 }
-#define COLOR_TARJETA      (Color){ 241, 239, 228, 255 }
-#define COLOR_BORDE        (Color){ 217, 210, 154, 255 }
-#define COLOR_ACENTO       (Color){ 133, 200, 162, 255 }
-#define COLOR_ACENTO_TXT   (Color){ 15, 58, 40, 255 }
-#define COLOR_MINT         (Color){ 187, 220, 181, 255 }
-#define COLOR_ROSA         (Color){ 233, 193, 217, 255 }
-#define COLOR_ALERTA       (Color){ 242, 178, 152, 255 } /* coral pastel: mismo tono suave, pero se lee como alerta */
-#define COLOR_TEXTO        (Color){ 58, 58, 52, 255 }
-#define COLOR_TEXTO_TENUE  (Color){ 74, 71, 60, 255 } /* mas oscuro que antes: pasa de contraste AA (6.4:1) a AAA (~8:1) */
+#define COLOR_FONDO        (Color){ 249, 245, 235, 255 } /* crema #F9F5EB */
+#define COLOR_TARJETA      (Color){ 255, 255, 255, 255 } /* tarjetas blancas sobre el fondo crema */
+#define COLOR_BORDE        (Color){ 222, 226, 233, 255 } /* borde sutil gris-navy para opciones no seleccionadas */
+#define COLOR_NAVY         (Color){ 18, 41, 79, 255 }    /* #12294F navy profundo: iconos, progreso, textos */
+#define COLOR_ACENTO       (Color){ 234, 84, 85, 255 }   /* #EA5455 coral: seleccion activa y botones primarios */
+#define COLOR_ACENTO_TXT   (Color){ 255, 255, 255, 255 } /* texto/iconos sobre fondos coral o navy */
+#define COLOR_NARANJA      (Color){ 240, 123, 63, 255 }  /* #F07B3F acento secundario, usado en el tip de COBI */
+#define COLOR_MINT         (Color){ 187, 220, 181, 255 } /* pantalla resultado: impacto bajo (sin cambios por ahora) */
+#define COLOR_ROSA         (Color){ 233, 193, 217, 255 } /* sin cambios por ahora */
+#define COLOR_ALERTA       (Color){ 242, 178, 152, 255 } /* pantalla resultado: impacto alto (sin cambios por ahora) */
+#define COLOR_TEXTO        (Color){ 18, 41, 79, 255 }    /* navy profundo para texto principal */
+#define COLOR_TEXTO_TENUE  (Color){ 58, 79, 110, 255 }   /* navy medio para texto secundario/tenue */
 
 typedef enum { PANTALLA_INTRO, PANTALLA_BIENVENIDA, PANTALLA_FORMULARIO, PANTALLA_RESULTADO } Pantalla;
 
@@ -185,22 +187,25 @@ int FuePresionadoEnRec(Rectangle rect) {
 }
 
 int botonConLetra(Rectangle rect, char letra, const char *label, int seleccionado) {
-    Color fondo = seleccionado ? COLOR_ACENTO : (Color){255,255,255,255};
-    Color colorTxt = seleccionado ? COLOR_ACENTO_TXT : COLOR_TEXTO;
+    /* Wash coral muy sutil cuando esta seleccionada; blanco en caso contrario.
+       El texto de la opcion NO cambia de color entre estados (siempre navy);
+       lo que comunica la seleccion es el borde y la letra. */
+    Color fondo = seleccionado ? (Color){ 253, 235, 235, 255 } : (Color){255,255,255,255};
+    Color colorBorde = seleccionado ? COLOR_ACENTO : COLOR_BORDE;
 
     DrawRectangleRounded(rect, 0.3f, 8, fondo);
-    if (!seleccionado) DrawRectangleRoundedLines(rect, 0.3f, 8, COLOR_BORDE);
+    DrawRectangleRoundedLines(rect, 0.3f, 8, colorBorde);
 
     Rectangle cajaLetra = { rect.x + 10, rect.y + rect.height/2 - 14, 28, 28 };
-    Color fondoLetra = seleccionado ? (Color){255,255,255,90} : COLOR_TARJETA;
+    Color fondoLetra = seleccionado ? COLOR_ACENTO : COLOR_NAVY;
     DrawRectangleRounded(cajaLetra, 0.3f, 6, fondoLetra);
     char textoLetra[2] = { letra, '\0' };
     Vector2 medidaLetra = MeasureTextEx(fuente, textoLetra, 15, 1.0f);
     DrawTextEx(fuente, textoLetra,
         (Vector2){ cajaLetra.x + 14 - medidaLetra.x/2, cajaLetra.y + 14 - medidaLetra.y/2 },
-        15, 1.0f, colorTxt);
+        15, 1.0f, COLOR_ACENTO_TXT);
 
-    texto(label, (int)rect.x + 50, (int)(rect.y + rect.height/2 - 9), 15, colorTxt);
+    texto(label, (int)rect.x + 50, (int)(rect.y + rect.height/2 - 9), 15, COLOR_TEXTO);
 
     return FuePresionadoEnRec(rect);
 }
@@ -321,12 +326,13 @@ int main(void) {
     fuente = LoadFontEx("recursos/Nunito-Regular.ttf", 64, codepoints, totalCodepoints);
     UnloadCodepoints(codepoints);
 
-    Texture2D iconoBienvenida  = LoadTexture("recursos/trees.png");
+    Texture2D iconoBienvenida  = LoadTexture("recursos/cobi_bienvenida.png");
     Texture2D iconoTransporte  = LoadTexture("recursos/transporte.png");
     Texture2D iconoAgua        = LoadTexture("recursos/agua.png");
     Texture2D iconoElectricidad= LoadTexture("recursos/electricidad.png");
     Texture2D iconoAire        = LoadTexture("recursos/aire.png");
     Texture2D iconoGas         = LoadTexture("recursos/gas.png");
+    Texture2D iconoTiempo      = LoadTexture("recursos/tiempo.png");
     Texture2D iconoPlanta      = LoadTexture("recursos/plant.png");
 
     Pantalla pantallaActual = PANTALLA_INTRO;
@@ -401,7 +407,10 @@ int main(void) {
         /* ===================== BIENVENIDA ===================== */
         else if (pantallaActual == PANTALLA_BIENVENIDA) {
 
-            float escalaIcono = 0.234f;
+            /* cobi_bienvenida.png es 1024x1024 (el trees.png anterior era mas chico),
+               por eso la escala se redujo a la mitad para mantener el mismo tamano
+               visual en pantalla (~120px). Revisar si se ve muy chico/grande al probar. */
+            float escalaIcono = 0.117f;
             DrawTextureEx(iconoBienvenida, (Vector2){ ANCHO/2 - 60, 40 }, 0, escalaIcono, WHITE);
 
             textoCentradoNegrita("Calculadora de Huella", ANCHO/2, 176, 19, COLOR_TEXTO);
@@ -479,7 +488,7 @@ int main(void) {
             if (progreso > 1.0f) progreso = 1.0f;
 
             DrawRectangleRounded((Rectangle){ 30, 34, ANCHO - 60, 8 }, 0.5f, 4, COLOR_BORDE);
-            DrawRectangleRounded((Rectangle){ 30, 34, (ANCHO - 60) * progreso, 8 }, 0.5f, 4, COLOR_ACENTO);
+            DrawRectangleRounded((Rectangle){ 30, 34, (ANCHO - 60) * progreso, 8 }, 0.5f, 4, COLOR_NAVY);
 
             char etiquetaProgreso[16];
             sprintf(etiquetaProgreso, "%d%%", (int)(progreso * 100));
@@ -487,26 +496,81 @@ int main(void) {
 
             Texture2D iconoActual = iconoTransporte;
             const char *pregunta = "";
+            const char *tipLinea1 = "";
+            const char *tipLinea2 = "";
 
             switch (paso) {
-                case PASO_TRANSPORTE:    iconoActual = iconoTransporte;   pregunta = "Como te transportaste hoy?"; break;
-                case PASO_TIEMPO:        iconoActual = iconoTransporte;   pregunta = "Cuanto dura tu trayecto (ida y vuelta)?"; break;
-                case PASO_DUCHA:         iconoActual = iconoAgua;         pregunta = "Como es tu ducha diaria?"; break;
-                case PASO_AGUA_EXTRA:    iconoActual = iconoAgua;         pregunta = "Usos adicionales de agua"; break;
-                case PASO_ELECTRICIDAD: iconoActual = iconoElectricidad; pregunta = "Cuanto pagas de luz al mes?"; break;
-                case PASO_AC:            iconoActual = iconoAire;         pregunta = "Uso de aire acondicionado?"; break;
-                case PASO_GAS:           iconoActual = iconoGas;          pregunta = "Que usas para cocinar?"; break;
+                case PASO_TRANSPORTE:
+                    iconoActual = iconoTransporte;
+                    pregunta = "Como te\ntransportaste hoy?";
+                    tipLinea1 = "COBI dice: Caminar o usar bici reduce";
+                    tipLinea2 = "tu huella casi a cero.";
+                    break;
+                case PASO_TIEMPO:
+                    iconoActual = iconoTiempo;
+                    pregunta = "Cuanto dura tu trayecto\n(ida y vuelta)?";
+                    tipLinea1 = "COBI dice: Trayectos mas cortos";
+                    tipLinea2 = "significan menos emisiones.";
+                    break;
+                case PASO_DUCHA:
+                    iconoActual = iconoAgua;
+                    pregunta = "Como es tu\nducha diaria?";
+                    tipLinea1 = "COBI dice: Reducir 2 min de ducha";
+                    tipLinea2 = "ahorra litros de agua al dia.";
+                    break;
+                case PASO_AGUA_EXTRA:
+                    iconoActual = iconoAgua;
+                    pregunta = "Usos adicionales\nde agua";
+                    tipLinea1 = "COBI dice: Reutilizar agua de riego";
+                    tipLinea2 = "o lavado reduce tu consumo.";
+                    break;
+                case PASO_ELECTRICIDAD:
+                    iconoActual = iconoElectricidad;
+                    pregunta = "Cuanto pagas de\nluz al mes?";
+                    tipLinea1 = "COBI dice: Recuerda apagar la luz";
+                    tipLinea2 = "al salir de la habitacion.";
+                    break;
+                case PASO_AC:
+                    iconoActual = iconoAire;
+                    pregunta = "Uso de aire\nacondicionado?";
+                    tipLinea1 = "COBI dice: Usar el aire acondicionado";
+                    tipLinea2 = "con moderacion reduce tu impacto.";
+                    break;
+                case PASO_GAS:
+                    iconoActual = iconoGas;
+                    pregunta = "Que usas para\ncocinar?";
+                    tipLinea1 = "COBI dice: Cocinar con la olla tapada";
+                    tipLinea2 = "ahorra energia y tiempo.";
+                    break;
             }
 
-            DrawRectangleRounded((Rectangle){ 30, 74, ANCHO - 60, 92 }, 0.15f, 8, COLOR_TARJETA);
-            DrawTextureEx(iconoActual, (Vector2){ 42, 86 }, 0, 0.11f, WHITE);
+            const int ALTO_TARJETA = 150; /* antes: 92, se agrando para que el icono de COBI se aprecie mas */
+
+            /* Backdrop navy corrido 4px a la izquierda: crea el acento de borde
+               izquierdo (como en el mockup) sin necesitar bordes por lado. */
+            DrawRectangleRounded((Rectangle){ 26, 74, ANCHO - 56, ALTO_TARJETA }, 0.15f, 8, COLOR_NAVY);
+            DrawRectangleRounded((Rectangle){ 30, 74, ANCHO - 60, ALTO_TARJETA }, 0.15f, 8, COLOR_TARJETA);
+
+            /* Caja navy detras del icono de categoria (como en el mockup aprobado) */
+            Rectangle cajaIcono = { 46, 90, 80, 80 };
+            DrawRectangleRounded(cajaIcono, 0.25f, 8, COLOR_NAVY);
+            float insetIcono = 80 * 0.09f;
+            Rectangle destIcono = {
+                cajaIcono.x + insetIcono, cajaIcono.y + insetIcono,
+                80 - 2*insetIcono, 80 - 2*insetIcono
+            };
+            DrawTexturePro(iconoActual,
+                (Rectangle){ 0, 0, (float)iconoActual.width, (float)iconoActual.height },
+                destIcono, (Vector2){0,0}, 0, WHITE);
+
             char etiquetaPaso[32];
             sprintf(etiquetaPaso, "Pregunta %d de %d", idxVisible + 1, totalVisible);
-            texto(etiquetaPaso, 108, 90, 12, COLOR_TEXTO_TENUE);
-            textoNegrita(pregunta, 108, 112, 15, COLOR_TEXTO);
+            texto(etiquetaPaso, 140, 94, 11, COLOR_TEXTO_TENUE);
+            textoNegrita(pregunta, 140, 118, 17, COLOR_TEXTO);
 
             const int ESPACIADO = 68;
             const int ALTO_OPCION = 54;
+            const int Y_OPCIONES = 244; /* antes: 186, se corrio hacia abajo por la tarjeta mas grande */
 
             /* NOTA IMPORTANTE: en todos los bloques de abajo el widget SIEMPRE
                se dibuja (para que no desaparezca durante el fade); el filtro
@@ -516,7 +580,7 @@ int main(void) {
             if (paso == PASO_TRANSPORTE) {
                 const char *ops[4] = {"A pie / Bicicleta", "Autobus / Metro", "Auto propio", "Motocicleta"};
                 for (int i = 0; i < 4; i++) {
-                    Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { 30, Y_OPCIONES + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.transporte == i+1);
                     int clic = botonConLetra(r, 'A'+i, ops[i], sel);
                     if (!bloqueadoPorFade && clic) respuestas.transporte = i+1;
@@ -525,7 +589,7 @@ int main(void) {
             else if (paso == PASO_TIEMPO) {
                 const char *ops[4] = {"Menos de 30 min", "30 min a 1h30", "1h30 a 3h (tranque)", "Mas de 3h"};
                 for (int i = 0; i < 4; i++) {
-                    Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { 30, Y_OPCIONES + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.tiempo_trayecto == i+1);
                     int clic = botonConLetra(r, 'A'+i, ops[i], sel);
                     if (!bloqueadoPorFade && clic) respuestas.tiempo_trayecto = i+1;
@@ -534,15 +598,15 @@ int main(void) {
             else if (paso == PASO_DUCHA) {
                 const char *ops[3] = {"Corta (menos de 5 min)", "Promedio (5 a 10 min)", "Larga (mas de 10 min)"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { 30, Y_OPCIONES + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.ducha == i+1);
                     int clic = botonConLetra(r, 'A'+i, ops[i], sel);
                     if (!bloqueadoPorFade && clic) respuestas.ducha = i+1;
                 }
             }
             else if (paso == PASO_AGUA_EXTRA) {
-                Rectangle r1 = { 30, 186, ANCHO - 60, ALTO_OPCION };
-                Rectangle r2 = { 30, 186 + ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                Rectangle r1 = { 30, Y_OPCIONES, ANCHO - 60, ALTO_OPCION };
+                Rectangle r2 = { 30, Y_OPCIONES + ESPACIADO, ANCHO - 60, ALTO_OPCION };
                 /* casilla() ya dibuja y gestiona su propio clic internamente;
                    para que no desaparezca durante el fade, siempre se dibuja,
                    y solo evitamos que cambie de estado bloqueando el toggle
@@ -560,7 +624,7 @@ int main(void) {
             else if (paso == PASO_ELECTRICIDAD) {
                 const char *ops[3] = {"Menos de $30 al mes", "$30 a $70 al mes", "Mas de $70 al mes"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { 30, Y_OPCIONES + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.electricidad == i+1);
                     int clic = botonConLetra(r, 'A'+i, ops[i], sel);
                     if (!bloqueadoPorFade && clic) respuestas.electricidad = i+1;
@@ -569,7 +633,7 @@ int main(void) {
             else if (paso == PASO_AC) {
                 const char *ops[3] = {"No uso (ventilacion natural)", "Moderado (1 a 4 horas)", "Intensivo (+5 horas)"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { 30, Y_OPCIONES + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.ac == i+1);
                     int clic = botonConLetra(r, 'A'+i, ops[i], sel);
                     if (!bloqueadoPorFade && clic) respuestas.ac = i+1;
@@ -578,12 +642,30 @@ int main(void) {
             else if (paso == PASO_GAS) {
                 const char *ops[3] = {"Gas en tanque (Gas LP)", "Estufa electrica/induccion", "Casi no cocino en casa"};
                 for (int i = 0; i < 3; i++) {
-                    Rectangle r = { 30, 186 + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
+                    Rectangle r = { 30, Y_OPCIONES + i*ESPACIADO, ANCHO - 60, ALTO_OPCION };
                     int sel = (respuestas.gas == i+1);
                     int clic = botonConLetra(r, 'A'+i, ops[i], sel);
                     if (!bloqueadoPorFade && clic) respuestas.gas = i+1;
                 }
             }
+
+            /* Tip de COBI: posicionado dinamicamente segun cuantas opciones
+               tiene el paso actual (4, 3, o 2 en el caso de las casillas de
+               agua extra), para que no quede pegado ni muy separado. */
+            int nOpcionesPaso = 4;
+            if (paso == PASO_DUCHA || paso == PASO_ELECTRICIDAD || paso == PASO_AC || paso == PASO_GAS) {
+                nOpcionesPaso = 3;
+            } else if (paso == PASO_AGUA_EXTRA) {
+                nOpcionesPaso = 2;
+            }
+            int yTip = Y_OPCIONES + (nOpcionesPaso - 1) * ESPACIADO + ALTO_OPCION + 20;
+
+            DrawRectangleRounded((Rectangle){ 30, (float)yTip, ANCHO - 60, 70 }, 0.2f, 8, COLOR_NAVY);
+            Rectangle circuloTip = { 46, (float)yTip + 21, 28, 28 };
+            DrawRectangleRounded(circuloTip, 0.5f, 8, COLOR_NARANJA);
+            textoCentrado("!", (int)(circuloTip.x + 14), (int)(circuloTip.y + 6), 14, COLOR_ACENTO_TXT);
+            texto(tipLinea1, 86, yTip + 18, 11, (Color){249, 245, 235, 255});
+            texto(tipLinea2, 86, yTip + 36, 11, (Color){249, 245, 235, 255});
 
             int hayRespuesta = pasoValido(paso, respuestas);
 
@@ -724,6 +806,7 @@ int main(void) {
     UnloadTexture(iconoElectricidad);
     UnloadTexture(iconoAire);
     UnloadTexture(iconoGas);
+    UnloadTexture(iconoTiempo);
     UnloadTexture(iconoPlanta);
 
     CloseWindow();

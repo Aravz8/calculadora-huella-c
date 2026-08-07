@@ -11,11 +11,8 @@
             padding: 0;
         }
         body {
-            /* Fondo kaki con el patron de hojas dispersas */
-            background-color: #e8e2c4;
-            background-image: url('fondo.jpg');
-            background-size: cover;
-            background-position: center;
+            /* Fondo solido navy, sin patron de hojas */
+            background-color: #2d4059;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -59,20 +56,37 @@
             display: block;
             image-rendering: -webkit-optimize-contrast;
         }
-        /* Input invisible para el teclado virtual */
+        /* Input invisible para el teclado virtual: cubre TODO el campo de
+           nombre, para que escribir y corregir con backspace funcione en
+           cualquier punto del campo (antes se angostaba para dejarle
+           espacio al boton 'x', pero eso dejaba una franja del campo sin
+           input encima, donde el clic no daba foco). */
         #input-nombre {
             position: absolute;
             left: 9.52%;
             top: 38.75%;
-            /* Se detiene antes del boton 'x' de borrar (que arranca ~81.9%
-               del ancho del canvas) para que el toque le llegue al canvas
-               y no lo intercepte este input invisible. */
-            width: 72%;
+            width: 80.95%;
             height: 5.5%;
             opacity: 0;
             border: none;
             font-size: 16px; /* Evita zoom automático en iOS */
             background: transparent;
+        }
+
+        /* Boton real de "limpiar nombre": va POR ENCIMA del input invisible
+           (mas adelante en el DOM = mayor prioridad de clic), posicionado
+           sobre la "x" que dibuja Raylib, con una zona de toque mas grande
+           (40x40 logicos) que el icono visual (28x28). */
+        #btn-borrar-nombre {
+            position: absolute;
+            left: 80.48%;
+            top: 39%;
+            width: 9.52%;
+            height: 5%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
         }
 
         /* Envoltorio de las dos columnas (panel decorativo + app) */
@@ -97,26 +111,29 @@
                 align-items: flex-start;
                 gap: 14px;
                 width: 340px;
-                background: #BBDCB5;
+                background: #12294F;
+                background-image: radial-gradient(circle at 25% 12%, rgba(240, 123, 63, 0.16), transparent 42%);
                 padding: 40px 32px;
                 border-radius: 16px 0 0 16px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             }
             #panel-desktop img {
-                width: 56px;
-                height: 56px;
+                width: 168px;
+                height: 168px;
+                object-fit: contain;
+                margin-bottom: 4px;
             }
             #panel-desktop h2 {
                 font-size: 17px;
-                font-weight: 600;
-                color: #3A3A34;
+                font-weight: 700;
+                color: #FFFFFF;
                 margin: 0;
                 line-height: 1.3;
             }
             #panel-desktop p {
                 font-size: 12.5px;
-                color: #3A3A34;
-                opacity: 0.85;
+                color: #F9F5EB;
+                opacity: 0.75;
                 margin: 0;
                 line-height: 1.5;
             }
@@ -142,18 +159,19 @@
 <body>
     <div id="app-wrapper">
         <div id="panel-desktop">
-            <img src="recursos/trees.png" alt="">
+            <img src="recursos/cobi_bienvenida.png" alt="COBI saludando">
             <h2>Calculadora de Huella<br>de Carbono Personal</h2>
             <p>Descubre tu impacto ambiental diario respondiendo 7 preguntas rápidas sobre transporte, agua, electricidad y más.</p>
             <div class="puntos">
-                <span style="background:#85C8A2"></span>
-                <span style="background:#E9C1D9"></span>
-                <span style="background:#D9D29A"></span>
+                <span style="background:#EA5455"></span>
+                <span style="background:#F07B3F"></span>
+                <span style="background:rgba(249,245,235,0.4)"></span>
             </div>
         </div>
         <div id="contenedor-app">
             <canvas class="emscripten" id="canvas" style="touch-action: none;" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
             <input type="text" id="input-nombre" maxlength="31" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button type="button" id="btn-borrar-nombre" aria-label="Borrar nombre"></button>
         </div>
     </div>
     <script type='text/javascript'>
@@ -179,6 +197,16 @@
             if (window.Module && Module.ccall) {
                 Module.ccall('ActualizarNombreDesdeJS', null, ['string'], [inputNombre.value]);
             }
+        });
+
+        /* Boton real de limpiar nombre: vacia el input real y dispara el
+           mismo evento 'input' de arriba, para no tener dos sistemas de
+           estado (el input HTML y la variable en C) desincronizados. */
+        var btnBorrarNombre = document.getElementById('btn-borrar-nombre');
+        btnBorrarNombre.addEventListener('click', function () {
+            inputNombre.value = '';
+            inputNombre.dispatchEvent(new Event('input'));
+            inputNombre.focus();
         });
     </script>
     {{{ SCRIPT }}}
