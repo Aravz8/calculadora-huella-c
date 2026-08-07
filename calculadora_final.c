@@ -362,6 +362,13 @@ int main(void) {
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         "áéíóúñÁÉÍÓÚÑ¿¡üÜ", &totalCodepoints);
     fuente = LoadFontEx("recursos/NunitoSans-Regular.ttf", 64, codepoints, totalCodepoints);
+    /* CLAVE: sin esto, Raylib dibuja el texto con filtro "nearest neighbor"
+       por defecto, lo que se ve dentado/tosco en cualquier fuente al
+       dibujarla en un tamano distinto al que se cargo (64px base vs los
+       11-19px que usamos en pantalla). Esto - no la tipografia elegida -
+       era la causa real de que el texto se viera mal sin importar que
+       fuente probaramos. */
+    SetTextureFilter(fuente.texture, TEXTURE_FILTER_BILINEAR);
     UnloadCodepoints(codepoints);
 
     Texture2D iconoBienvenida  = LoadTexture("recursos/cobi_bienvenida.png");
